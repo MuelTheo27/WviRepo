@@ -6,8 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Sabre\Xml\Service;
-use Sabre\Xml\Reader;
-use Sabre\Xml\Deserializer;
+
 class AprController extends Controller
 {
     //
