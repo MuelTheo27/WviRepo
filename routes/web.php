@@ -18,6 +18,5 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
-    Route::get('/api/test',[AprController::class,'getApr'])->name('Api.Test');
+Route::get('/api/test',[AprController::class,'getApr'])->name('Api.Test');
 require __DIR__.'/auth.php';
