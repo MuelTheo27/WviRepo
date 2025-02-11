@@ -11,50 +11,67 @@ class AprController extends Controller
 {
     //
     public function findValueWithKey(array $list, $key){
-        $value = null;
+        $value = [];
         foreach($list as $item){
           
             if(array_key_exists("name", $list)){
                 if($list["name"] === $key){
-                    $value = $list["value"];
+                    array_push($value, $list["value"]);
                 }
             }
             if(is_array($item)){
                 /* rekursi , kalau hasilnya null jangan di tambahin ke variable temp */
                 $temp = $this->findValueWithKey($item, $key);
                 if ($temp !== null) {
-                    if (is_array($value)) {
-                        $value = array_merge($value, $temp);  
-                    } else {
-                        $value = $temp;  
-                    }
+                 
+                    $value = array_merge($value, $temp);  
+                 
                 }
             }
         }
         return $value;
     }
     
-    public function getApr(){
+    public function getAPR(){
 
         $url = env("APR_URI");
         $password = env("APR_PASSWORD");
         $username = env("APR_USERNAME");
 
         $response = Http::withBasicAuth($username, $password)->withHeaders(["wv-version" => "v500", 'Accept' => 'application/xml'])->get($url);
+        
         $response->onError(function ($err){
             Log::error('Request failed: ' . $err->getMessage());
+            return;
         });
 
         $service = new Service();
         $parsed_xml = $service->parse($response->body());
-        $value = $this->findValueWithKey($parsed_xml, "{}child_code");
+        $value = $this->findValueWithKey($parsed_xml, "{}url");
         
         if($value == null){
             print_r("Key-Value Pair not found");
         }
         else{
-            print_r($value);
+            $this->retrieveAPRUrl($value);
         }
-}
+    }
+
+    public function retrieveAPRUrl(array $arr){
+        if(count($arr) === 9){
+            $original_url = $arr[0];
+            $thumb_url = $arr[3];
+            $web_url = $arr[8];
+
+            print_r($original_url);
+            print_r($thumb_url);
+            print_r($web_url);
+        }
+        else{
+            Log::error("Wrong array!");
+        }
+
+
+    }
 
 }
