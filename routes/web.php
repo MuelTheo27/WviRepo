@@ -17,6 +17,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::prefix("/api")->group(function(){
+        Route::post("/upload/xslx", )->name("upload.xlsx");
+        Route::prefix("data")->group(function(){
+            Route::get("/index")->name("data.index");
+            Route::post("/search")->name("data.search");
+            Route::post("/sort")->name("data.sort");
+        });
+        Route::get("/download/xlsx")->name("download.xlsx");
+    });
 });
 
 Route::get('/api/test',[AprController::class,'getApr'])->name('Api.Test');

@@ -10,6 +10,8 @@
         "laravel/breeze": "^2.3",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
+        "maatwebsite/excel": "^1.1",
+        "phpoffice/phpspreadsheet": "^4.0",
         "sabre/xml": "^4.0"
     },
     "require-dev": {
