@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+use ErrorException;
 use Illuminate\Http\UploadedFile;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet;
@@ -17,7 +18,6 @@ class ExcelService
       
     }
 
-    
     public function getFileExtensions(UploadedFile $excel_file){
         if(strcmp($excel_file->getExtension(), "xlsx") == 0){
             return "Xlsx";
@@ -45,35 +45,47 @@ class ExcelService
         ];
     }
 
-    public function validateCellContent(Worksheet $spreadsheet): bool{
-        if($spreadsheet->getCell('A1')->getValue() !== "sponsor_name" && 
-           $spreadsheet->getCell('A2')->getValue() !== "sponsor_category" && 
+    public function validateCellContent(array $content){
+        /* 
+        True kalau semua datanya ada isinya, False kalau ada data yang kosong isinya 
+        */
+        if(empty($content["child_codes"]) || $content["sponsor_name"] === nullOrEmptyString() || $content["sponsor_category"] === nullOrEmptyString()){
+            return false;
+        }
+        return true;
+    }
+    public function validateCellContentTag(Worksheet $spreadsheet): bool{
+        if($spreadsheet->getCell('A1')->getValue() !== "sponsor_name" || 
+           $spreadsheet->getCell('A2')->getValue() !== "sponsor_category" || 
            $spreadsheet->getCell('A4')->getValue() !== "child_code" )
         {
             return false;
         }
-        
+
         return true;
     }
 
     public function processExcel(UploadedFile $excel_file)
     {
-        
-
         try {
             $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($this->getFileExtensions($excel_file));
-
             $spreadsheet = $reader->load($excel_file->getPathname())->getActiveSheet();
             
-         
+            if(!$this->validateCellContentTag($spreadsheet)){ 
+                throw new \Exception("Incorrect cell content"); 
+            }
+            
+            $data = $this->getRequiredData($spreadsheet);
 
-
-
-       
+            if(!$this->validateCellContent($data)){
+                throw new \Exception("An empty cell content exists");
+            }
+            
+            return $data;
+            
         } catch (\Throwable $th) {
-            //throw $th;
+            return $th;
         }
-        
     }
 
   
