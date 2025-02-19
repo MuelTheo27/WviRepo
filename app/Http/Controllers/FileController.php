@@ -22,20 +22,30 @@ class FileController extends Controller
             'file.required' => 'Please upload a file',
             'file.mimes' => 'Format file harus xlsx atau csv',
         ]);
+        try {
+            $uploadedFile = $request->file("file");
+            $processedData = (new ExcelService())->processExcel($uploadedFile);
+            
+            if (is_null($processedData)) {
+                return response()->json(['error' => 'Failed to process the Excel file'], 422);
+            }
 
-        $file = $request->file("file");
-        $excel_record = new ExcelService()->processExcel($file);
+            $this->storeExcelData($processedData);
+        }
+        catch(\Throwable $th){
+            return response()->json(['error' => 'An error occurred: ' . $th->getMessage()], 500);
+        }
+   
+       
 
-        if(!$excel_record){ return; }
 
-        $this->store($excel_record);
         
     }
     /* function buat masukin hasil data proses excel ke database
         bentuk array = 
         $record = [child_codes: [], sponsor_category: string, sponsor_name: string}
     */
-    private function store(array $record){
+    private function storeExcelData(array $record){
 
     }
 
