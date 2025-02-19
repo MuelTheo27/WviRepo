@@ -9,10 +9,10 @@ class FileController extends Controller
 {
     //
 
-    
+
 
     /*function buat handle upload
-    
+
 
     */
     public function uploadXslx(Request $request) {
@@ -39,10 +39,11 @@ class FileController extends Controller
        
 
 
-        
+    
+
     }
     /* function buat masukin hasil data proses excel ke database
-        bentuk array = 
+        bentuk array =
         $record = [child_codes: [], sponsor_category: string, sponsor_name: string}
     */
     private function storeExcelData(array $record){
