@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Http\Services\Apr\AprService;
 use Log;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
@@ -41,18 +42,19 @@ class FileController extends Controller
             error_log($th->getMessage());
             return response()->json(['error' => 'An error occurred: ' . $th->getMessage()], 500);
         }
-   
-       
-
-
-    
 
     }
     /* function buat masukin hasil data proses excel ke database
         bentuk array =
         $record = [child_codes: [], sponsor_category: string, sponsor_name: string}
     */
-    private function storeExcelData($record){
+    public function storeExcelData($record){
+        $aprService = new AprService();
+        $pdfUrlArray = [];
+        array_map(function($childcode) use ($aprService, &$pdfUrlArray){
+            array_push($pdfUrlArray, $aprService->getPdfUrl($childcode));
+        }, $record["child_codes"]);
+  
 
     }
 

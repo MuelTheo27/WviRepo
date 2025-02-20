@@ -33,7 +33,7 @@ Route::get('/dashboard', function () {
 Route::get("/table", function(){
     return view("tabledata");
 });
-// Route::get('/api/test',[AprController::class,'getApr'])->name('Api.Test');
+// Route::get('/api/test',[FileController::class,'storeExcelData'])->name('Api.Test');
 require __DIR__.'/auth.php';
 
 Route::get('admin/dashboard',[AdminController::class,'index'])->name('admin.home');

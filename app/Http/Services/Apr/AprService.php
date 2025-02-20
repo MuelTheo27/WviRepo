@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Http\Services\Apr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Client\RequestException;
 use XMLReader;
 use Sabre\Xml\Service;
@@ -16,45 +17,71 @@ class AprService
       
     }
 
-     /* iterator(one of array member key) : return the main array 
-        function should returning an array that matches one of the member with the function argument
-    */
-    public function iterator(array $array, string $tag, string $val): array {
-        $result = [];
-        foreach ($array as $key => $value) {
-            if($array[$tag] === $value){
-                return $array;
-            }
 
-            if(is_array($value) && count($value) > 0){
-                $content = $this->iterator($value, $tag, $val );
-                if(!is_null($content)) {
-                    $result = $content;
+    public function helper($array, $tag, $val): bool {
+        foreach ($array as $key => $value) {
+            if (isset($value["name"]) && isset($value["value"])) {
+            
+                $Tag = str_replace("{}", "", $value["name"]);
+                $Val = is_string($value["value"]) ? str_replace("{}", "", $value["value"]) : $value["value"];
+    
+                if ($Tag === $tag && $Val === $val) {
+                    return true; 
                 }
             }
         }
-        return $result;
+        return false;
+    }
+    
+    public function iterator(array $array, string $tag, string $val): ?array {
+        foreach ($array as $key => $value) {
+            if (is_array($value) && count($value) > 0) {
+             
+                if ($this->helper($value, $tag, $val)) {
+                    return $array;
+                }
+                $found = $this->iterator($value, $tag, $val);
+                if ($found !== null) {
+                    return $found; 
+                }
+            }
+        }
+    
+        return null; 
     }
 
     public function getPdfUrl(string $child_code){
         $xml_data = $this->fetchAprEndpoint($child_code);
         
+       
         if(!$xml_data) { return false; }
 
         $apr_data = $this->readXml($xml_data);
-
+    
         if(!$apr_data) { return false; }
 
-        return $apr_data["url"];
+        $pdfUrl = "";
+
+        array_map(function($data) use (&$pdfUrl){
+            if(isset($data["name"]) && $data["name"] === "{}url"){
+                $pdfUrl = $data["value"];
+            }
+        },$apr_data["value"]);
+
+        return $pdfUrl;
+   
     }
 
     public function readXml(String $input){
 
         try {
-            $xmlArray = new Service()->parse($input);
+            $service = new Service();
+            $xmlArray = $service->parse($input);
         } catch (\Throwable $th) {
             return new Error($th->getMessage());
         }
+
+   
        
         $data_result = $this->iterator($xmlArray, "name", "original");
 
@@ -63,20 +90,21 @@ class AprService
     }
     
     public function fetchAprEndpoint(string $child_code){
-        $aprEndpoint = url(env("APR_URI"), ["child_code" => $child_code]) . env("APR_URI_ADDITIONAL_PARAM");
+        $aprEndpoint = url(env("APR_URI"). "?").Arr::query(["child_code" => $child_code]) . "&" . env("APR_URI_ADDITIONAL_PARAM");
+
         $xmlResponse = Http::withBasicAuth(env("APR_USERNAME"), env("APR_PASSWORD"))
                    ->withHeaders(["wv-version" => "v500", 'Accept' => 'application/xml'])
                    ->get($aprEndpoint);
-        if($xmlResponse->successful()) {
+                   
+        if($xmlResponse->successful()){
             return $xmlResponse->body();
         }
         else{
-            $xmlResponse->onError(function(RequestException $err){
-                Log::error("APR endpoint error: " . $err->getMessage());
-            });
+            Log::error("APR endpoint error: " . $xmlResponse->body());
             return null;
         }
        
 
     }
+
 }
