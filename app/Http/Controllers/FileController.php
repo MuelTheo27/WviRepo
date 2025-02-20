@@ -1,8 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
+use Log;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
-use App\Services\ExcelService;
+use App\Http\Services\Excel\ExcelService;
+
 use Illuminate\Http\Request;
 
 class FileController extends Controller
@@ -31,8 +34,11 @@ class FileController extends Controller
             }
 
             $this->storeExcelData($processedData);
+            $output = new ConsoleOutput();
+            $output->writeln(print_r($processedData, true));
         }
         catch(\Throwable $th){
+            error_log($th->getMessage());
             return response()->json(['error' => 'An error occurred: ' . $th->getMessage()], 500);
         }
    
@@ -46,7 +52,7 @@ class FileController extends Controller
         bentuk array =
         $record = [child_codes: [], sponsor_category: string, sponsor_name: string}
     */
-    private function storeExcelData(array $record){
+    private function storeExcelData($record){
 
     }
 

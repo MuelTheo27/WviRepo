@@ -1,6 +1,5 @@
 <?php
-
-namespace App\Services;
+namespace App\Http\Services\Excel;
 use ErrorException;
 use Illuminate\Http\UploadedFile;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,10 +18,10 @@ class ExcelService
     }
 
     public function getFileExtensions(UploadedFile $excel_file){
-        if(strcmp($excel_file->getExtension(), "xlsx") == 0){
+        if(strcmp($excel_file->getClientOriginalExtension(), "xlsx") == 0){
             return "Xlsx";
         }
-        else if(strcmp($excel_file->getExtension(), "csv") == 0){
+        else if(strcmp($excel_file->getClientOriginalExtension(), "csv") == 0){
             return "Csv";
         }
         
@@ -49,7 +48,7 @@ class ExcelService
         /* 
         True kalau semua datanya ada isinya, False kalau ada data yang kosong isinya 
         */
-        if(empty($content["child_codes"]) || $content["sponsor_name"] === nullOrEmptyString() || $content["sponsor_category"] === nullOrEmptyString()){
+        if(empty($content["child_codes"]) || !$content["sponsor_name"] || !$content["sponsor_category"]){
             return false;
         }
         return true;
