@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Child;
 use Illuminate\Http\Request;
 use App\Models\Sponsor;
 use App\Models\SponsorCategory;

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('content', function (Blueprint $table) {
         $table->id('content_id');
         $table->string('pdf_link');
-        $table->foreignId('child_id')->unique()->constrained('children')->cascadeOnDelete();
         $table->timestamps();
         });
     }
