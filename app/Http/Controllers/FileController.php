@@ -35,9 +35,7 @@ class FileController extends Controller
             }
 
             $this->storeExcelData($processedData);
-            $output = new ConsoleOutput();
-            $output->writeln(print_r($processedData, true));
-        }
+                }
         catch(\Throwable $th){
             error_log($th->getMessage());
             return response()->json(['error' => 'An error occurred: ' . $th->getMessage()], 500);
@@ -54,6 +52,10 @@ class FileController extends Controller
         array_map(function($childcode) use ($aprService, &$pdfUrlArray){
             array_push($pdfUrlArray, $aprService->getPdfUrl($childcode));
         }, $record["child_codes"]);
+
+
+        $output = new ConsoleOutput();
+        $output->writeln(print_r($pdfUrlArray, true));
   
 
     }
