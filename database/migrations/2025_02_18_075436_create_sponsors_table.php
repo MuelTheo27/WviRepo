@@ -12,12 +12,13 @@ return new class extends Migration
     public function up()
     {
         Schema::create('sponsors', function (Blueprint $table) {
-        $table->id('sponsor_id');
-        $table->unsignedBigInteger("sponsor_category_id");
-        $table->string('sponsor_name');
-        $table->foreign('sponsor_category_id')->on("sponsor_categories")->references("sponsor_category_id");
-        $table->timestamps();
+            $table->id('sponsor_id');
+            $table->string('sponsor_name');
+            $table->unsignedBigInteger('sponsor_category_id');
+            $table->foreign('sponsor_category_id')->on("sponsor_categories")->references("sponsor_category_id");
+            $table->timestamps();
         });
+        
     }
 
     /**
