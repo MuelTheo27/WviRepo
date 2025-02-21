@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('child_code')->unique();
             $table->unsignedBigInteger("sponsor_id");
             $table->foreign('sponsor_id')->on("sponsors")->references("sponsor_id")->onDelete("cascade");
+            $table->unsignedBigInteger("content_id");
+            $table->foreign('content_id')->on("content")->references("content_id")->onDelete("cascade");
             $table->timestamps();
         });
     }
