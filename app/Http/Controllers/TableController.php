@@ -9,9 +9,6 @@ use App\Models\SponsorCategory;
 
 class TableController extends Controller
 {
-    /*
-    Function to get all data for the table
-    */
     public function getTableData()
     {
         // Fetch all sponsors with their category and children
@@ -19,9 +16,6 @@ class TableController extends Controller
         return response()->json($sponsors);
     }
 
-    /*
-    Function to view the table page (fetch data from sponsors, categories, and children)
-    */
     public function getTablePage()
     {
         // Fetch all sponsors with their category and children
@@ -29,9 +23,6 @@ class TableController extends Controller
         return view('table', compact('sponsors'));
     }
 
-    /*
-    Function for searching sponsors
-    */
     public function searchSponsor(Request $request)
     {
         $query = $request->query('query'); // Get the search query from the URL parameter
@@ -46,14 +37,9 @@ class TableController extends Controller
             ->get();
 
         
-       
-
         return response()->json($sponsors);
     }
 
-    /*
-    Function for sorting sponsors
-    */
     public function sortSponsor(Request $request)
     {
         $sortBy = $request->query('sort_by', 'created_at'); // Default sort by newest (created_at)
@@ -73,9 +59,6 @@ class TableController extends Controller
         return response()->json($sponsors);
     }
 
-    /*
-    Function to add new sponsor data
-    */
     public function addSponsor(Request $request)
     {
         // Validate the request data
@@ -91,9 +74,6 @@ class TableController extends Controller
         return response()->json($sponsor, 201);
     }
 
-    /*
-    Function to delete a sponsor
-    */
     public function deleteSponsor($id)
     {
         // Find the sponsor by ID or fail
