@@ -6,6 +6,8 @@ use App\Http\Controllers\FileController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TableController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SponsorController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -14,6 +16,10 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/search-sponsors', [SponsorController::class, 'search'])->name('sponsors.search');
+Route::get('/table', [SponsorController::class, 'index'])->name('table.index');
+
 
 // Route::middleware('auth')->group(function () {
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -35,6 +41,8 @@ Route::get("/table", function () {
     return view("tabledata");
 });
 // Route::get('/api/test',[FileController::class,'storeExcelData'])->name('Api.Test');
-require __DIR__ . '/auth.php';
-Route::get("/test-data", [TableController::class, "getTablePage"]);
-Route::get('admin/dashboard', [AdminController::class, 'index'])->name('admin.home');
+require __DIR__.'/auth.php';
+
+Route::get('admin/dashboard',[AdminController::class,'index'])->name('admin.home');
+
+

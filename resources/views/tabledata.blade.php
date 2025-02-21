@@ -71,30 +71,36 @@
             <input type="text" id="search" class="form-control w-25 ms-auto" placeholder="Search for sponsors...">
         </div>
 
-        <!-- Sponsor Table -->
-        <table class="table table-bordered mt-3">
+                <!-- Sponsor Table -->
+                        <table class="table table-bordered mt-3">
             <thead class="table-light">
                 <tr>
-                    <th data-column="id">Sponsor ID</th>
-                    <th data-column="name">Sponsor Name</th>
-                    <th data-column="grade">Sponsor Grade</th>
-                    <th data-column="approval">Approval</th>
+                    <th>Child Code</th>
+                    <th>Sponsor ID</th>
+                    <th>Sponsor Name</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody id="sponsorTable">
-                <tr>
-                    <td>1</td>
-                    <td>Company A</td>
-                    <td>Gold</td>
-                    <td>Approved</td>
-                    <td>
-                        <button class="btn btn-primary btn-sm">Download</button>
-                        <button class="btn btn-danger btn-sm">Delete</button>
-                    </td>
-                </tr>
+                @if(isset($children) && count($children) > 0)
+                    @foreach ($children as $list)
+                        <tr>
+                            <td>{{ $list->id }}</td>
+                            <td>{{ $list->sponsor_id }}</td>
+                            <td>{{ $list->sponsor_name }}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm">Download</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr>
+                    @endforeach
+                @else
+                    <tr><td colspan="4" class="text-center">No data available</td></tr>
+                @endif
             </tbody>
+
         </table>
+
     </div>
 
     <!-- Bootstrap Modal for "Add New Data" with Drag & Drop -->
@@ -222,4 +228,45 @@
     </script>
 
 </body>
+    <script>
+        $(document).ready(function () {
+            $('#search').on('keyup', function () {
+                let query = $(this).val();
+
+                $.ajax({
+                    url: "{{ route('sponsors.search') }}",
+                    type: "GET",
+                    data: { query: query },
+                    dataType: "json",
+                    success: function (data) {
+                        let tbody = $("#sponsorTable");
+                        tbody.empty(); // Clear previous results
+
+                        if (data.children.length > 0) {
+                            data.children.forEach(function (sponsor) {
+                                tbody.append(`
+                                    <tr>
+                                        <td>${sponsor.id}</td>
+                                        <td>${sponsor.sponsor_id ?? 'N/A'}</td>
+                                        <td>${sponsor.sponsor_name}</td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm">Download</button>
+                                            <button class="btn btn-danger btn-sm">Delete</button>
+                                        </td>
+                                    </tr>
+                                `);
+                            });
+                        } else {
+                            tbody.append(`<tr><td colspan="4" class="text-center">No sponsors found</td></tr>`);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log("Error: ", xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+
+
 </html>
