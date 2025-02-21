@@ -23,8 +23,8 @@ Route::get('/dashboard', function () {
         Route::post("/upload/xslx", [FileController::class, 'uploadXslx'])->name("upload.xlsx");
         Route::prefix("data")->group(function(){
             Route::get("/index")->name("data.index");
-            Route::get("/search")->name("data.search");
-            Route::get("/sort")->name("data.sort");
+            Route::post("/search")->name("data.search");
+            Route::post("/sort")->name("data.sort");
         });
         Route::get("/download/xlsx")->name("download.xlsx");
     });
