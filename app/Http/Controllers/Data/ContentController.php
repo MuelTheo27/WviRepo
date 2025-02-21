@@ -3,24 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Child;
+use App\Models\Content;
 use Illuminate\Http\Request;
 
-class ChildController extends Controller
+class ContentController extends Controller
 {
-    public function index()
+    public static function index()
     {
-        $children = Child::all();
-        return response()->json($children);
+        $content = Content::all();
+        return $content;
     }
 
-    public static function store(string $childCode, string $sponsorId, string $contentId)
+    public static function store(string $pdfLink)
     {
-        Child::insert([
-            "child_code" => $childCode,
-            "sponsor_id" => $sponsorId,
-            "content_id" => $contentId
+        $content = Content::where("pdf_link", $pdfLink)->first();
+
+        if ($content) {
+            return $content->id; // Return existing sponsor ID
+        }
+
+    // Insert new sponsor and return its ID
+        return Content::insertGetId([
+            "pdf_link" => $pdfLink
         ]);
-     
     }
 
     public function show($id)

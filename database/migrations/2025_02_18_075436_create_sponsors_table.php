@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('sponsors', function (Blueprint $table) {
         $table->id('sponsor_id');
+        $table->unsignedBigInteger("sponsor_category_id");
         $table->string('sponsor_name');
-        $table->foreignId('sponsor_category_id')->nullable()->constrained('sponsor_categories')->nullOnDelete();
+        $table->foreign('sponsor_category_id')->on("sponsor_categories")->references("sponsor_category_id");
         $table->timestamps();
         });
     }

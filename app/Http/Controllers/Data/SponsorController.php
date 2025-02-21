@@ -10,13 +10,20 @@ class SponsorController extends Controller
     public function index()
     {
         $sponsors = Sponsor::all();
-        return response()->json($sponsors);
+        return $sponsors;
     }
 
-    public function store(Request $request)
+    public static function storeSponsor(string $sponsorName, int $sponsorCategory)
     {
-        $sponsor = Sponsor::create($request->all());
-        return response()->json($sponsor, 201);
+        $sponsor = Sponsor::where("sponsor_name", $sponsorName)->first();
+
+        if ($sponsor) {
+            return $sponsor->id; 
+        }
+        return Sponsor::insertGetId([
+            'sponsor_name' => $sponsorName,
+            'sponsor_category' => $sponsorCategory
+        ]);
     }
 
     public function show($id)

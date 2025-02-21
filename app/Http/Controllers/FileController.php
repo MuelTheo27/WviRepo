@@ -35,7 +35,7 @@ class FileController extends Controller
             }
 
             $this->storeExcelData($processedData);
-                }
+        }
         catch(\Throwable $th){
             error_log($th->getMessage());
             return response()->json(['error' => 'An error occurred: ' . $th->getMessage()], 500);
@@ -48,16 +48,14 @@ class FileController extends Controller
     */
     public function storeExcelData($record){
         $aprService = new AprService();
-        $pdfUrlArray = [];
-        array_map(function($childcode) use ($aprService, &$pdfUrlArray){
-            array_push($pdfUrlArray, $aprService->getPdfUrl($childcode));
+        $sponsor_id = SponsorController::storeSponsor($record["sponsor_name"], $record["sponsor_category"]);
+
+        array_map(function($childcode) use ($aprService, $sponsor_id){
+
+            $content_id = ContentController::store($aprService->getPdfUrl($childcode));
+            ChildController::store($childcode, $sponsor_id, $content_id );
+
         }, $record["child_codes"]);
-
-
-        $output = new ConsoleOutput();
-        $output->writeln(print_r($pdfUrlArray, true));
-  
-
     }
 
 }
