@@ -29,7 +29,7 @@ class FileController extends Controller
         try {
             $uploadedFile = $request->file("file");
             $processedData = (new ExcelService())->processExcel($uploadedFile);
-            
+
             if (is_null($processedData)) {
                 return response()->json(['error' => 'Failed to process the Excel file'], 422);
             }

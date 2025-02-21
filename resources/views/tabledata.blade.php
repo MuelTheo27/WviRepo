@@ -20,7 +20,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            pointer-events: none; /* Keep text visible */
+            pointer-events: none;
         }
         .file-list {
             margin-top: 10px;
@@ -54,7 +54,7 @@
         <!-- Top Controls -->
         <div class="d-flex align-items-center gap-2 mb-3">
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSponsorModal">Add New Data</button>
-            
+
             <div class="d-flex gap-2">
                 <select id="sortByDate" class="form-select">
                     <option value="newest">Sort by Newest</option>
@@ -114,7 +114,7 @@
                 <div class="modal-body">
                     <p class="text-muted">Files should be <strong>.xlsx</strong></p>
 
-                    <!-- Dropzone Upload (No Thumbnail Preview) -->
+                    <!-- Dropzone Upload -->
                     <form action="{{ route('upload.xlsx') }}" class="dropzone" id="fileDropzone">
                         @csrf
                         <div class="dz-message">
@@ -122,7 +122,6 @@
                         </div>
                     </form>
 
-                    <!-- List of Uploaded Files -->
                     <ul id="fileList" class="file-list"></ul>
 
                 </div>
@@ -145,26 +144,25 @@
                 <p class="text-muted">You could download or exit</p>
 
                 <ul id="fileSuccessList" class="file-list"></ul>
-
                 <p id="moreFilesText" class="text-muted" style="display: none;"></p>
 
-                <button class="btn btn-primary w-100">Download</button>
+                <a href="https://d3cfrqjucqh0ip.cloudfront.net/child/pdf/202849-QTQW_20241022_150747_CCS.pdf" class="btn btn-primary w-100" download>Download PDF</a>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap & Dropzone JS -->
+    <!-- JS Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <script>
-                Dropzone.options.fileDropzone = {
+        Dropzone.options.fileDropzone = {
             paramName: "file",
-            maxFiles: null,  // Allows unlimited files
+            maxFiles: null,
             acceptedFiles: ".xlsx",
-            previewsContainer: null,  // Prevents Dropzone from adding previews
-            createImageThumbnails: false,  // Disables image thumbnails
+            previewsContainer: null,
+            createImageThumbnails: false,
             addRemoveLinks: false,
 
             init: function () {
@@ -180,7 +178,6 @@
                 let uploadedFiles = [];
 
                 this.on("addedfile", function (file) {
-                   
                     if (file.previewElement) {
                         file.previewElement.remove();
                     }
@@ -204,7 +201,6 @@
                     let uploadModal = bootstrap.Modal.getInstance(document.getElementById("addSponsorModal"));
                     uploadModal.hide();
 
-                    // Show the success modal
                     fileSuccessList.innerHTML = "";
                     let totalFiles = uploadedFiles.length;
                     let displayedFiles = uploadedFiles.slice(0, 5);
@@ -221,10 +217,8 @@
 
                     successModal.show();
                 });
-
             }
         };
-
     </script>
 
 </body>
