@@ -10,7 +10,7 @@ class Child extends Model
     use HasFactory;
 
     protected $table = "children";
-    protected $primaryKey = 'child_id';
+    protected $primaryKey = 'id';
     protected $fillable = ['child_code', 'sponsor_id'];
 
     public function sponsor()

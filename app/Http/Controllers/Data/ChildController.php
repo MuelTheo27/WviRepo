@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Http\Controllers\Data;
+use App\Http\Controllers\Controller;
 use App\Models\Child;
 use Illuminate\Http\Request;
 
@@ -15,7 +15,7 @@ class ChildController extends Controller
 
     public static function store(string $childCode, string $sponsorId, string $contentId)
     {
-        Child::insert([
+        Child::firstOrCreate([
             "child_code" => $childCode,
             "sponsor_id" => $sponsorId,
             "content_id" => $contentId

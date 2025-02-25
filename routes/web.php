@@ -5,6 +5,7 @@ use App\Http\Controllers\AprController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TableController;
+use App\Http\Services\Apr\AprService;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SponsorController;
 
@@ -40,7 +41,7 @@ Route::prefix("/api")->group(function () {
 Route::get("/table", function () {
     return view("tabledata");
 });
-// Route::get('/api/test',[FileController::class,'storeExcelData'])->name('Api.Test');
+Route::get('/api/test',[AprService::class,'getPdfUrl'])->name('Api.Test');
 require __DIR__.'/auth.php';
 
 Route::get('admin/dashboard',[AdminController::class,'index'])->name('admin.home');

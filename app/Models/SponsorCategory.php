@@ -9,7 +9,7 @@ class SponsorCategory extends Model
 {
     use HasFactory;
     
-    protected $primaryKey = 'sponsor_category_id';
+    protected $primaryKey = 'id';
     // protected $fillable = ['sponsor_category_name'];
     
     public function sponsors()

@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Client\RequestException;
 use XMLReader;
-use Sabre\Xml\Service;
+use Sabre\Xml\Reader;
 use Error;
 use Log;
 class AprService
@@ -17,41 +17,25 @@ class AprService
       
     }
 
-
-    public function helper($array, $tag, $val): bool {
-        foreach ($array as $key => $value) {
-            if (isset($value["name"]) && isset($value["value"])) {
-            
-                $Tag = str_replace("{}", "", $value["name"]);
-                $Val = is_string($value["value"]) ? str_replace("{}", "", $value["value"]) : $value["value"];
-    
-                if ($Tag === $tag && $Val === $val) {
-                    return true; 
+    public function xmlParser(array $array, $name, string $children_name, string $value){
+        if(isset($array["value"], $array["name"]) && $array["value"] == $value){ 
+            print_r($array["value"]);
+            return ["result" => true];
+        }
+        foreach($array as $item){
+            if(is_array($item)){
+                if(isset($array["name"]) && $array["name"] == $name){
+                    $status = $this->xmlParser($item,$children_name, $children_name, $value);
+                    if(isset($status["result"]) && $status["result"] == true) { return $array; }
                 }
+                $result = $this->xmlParser($item, $name, $children_name, $value);
+                if($result) { return $result; }
             }
         }
-        return false;
     }
     
-    public function iterator(array $array, string $tag, string $val): ?array {
-        foreach ($array as $key => $value) {
-            if (is_array($value) && count($value) > 0) {
-             
-                if ($this->helper($value, $tag, $val)) {
-                    return $array;
-                }
-                $found = $this->iterator($value, $tag, $val);
-                if ($found !== null) {
-                    return $found; 
-                }
-            }
-        }
-    
-        return null; 
-    }
-
-    public function getPdfUrl(string $child_code){
-        $xml_data = $this->fetchAprEndpoint($child_code);
+    public function getPdfUrl(){
+        $xml_data = $this->fetchAprEndpoint("196811-1660");
         
        
         if(!$xml_data) { return false; }
@@ -72,20 +56,23 @@ class AprService
    
     }
 
-    public function readXml(String $input){
+    public function readXml($xml_data){
 
+        $input = $xml_data;
         try {
-            $service = new Service();
-            $xmlArray = $service->parse($input);
+            $service = new Reader();
+            $service->xml($input);
+            dd($this->xmlParser($service->parse(), "{}csi_catalog_attribute", "{}category_value_description", "FY 2025"));
         } catch (\Throwable $th) {
             return new Error($th->getMessage());
         }
 
-   
-       
-        $data_result = $this->iterator($xmlArray, "name", "original");
+        
 
-        return $data_result ? $data_result : Log::Error("Error on parsing xml");
+        
+        // $data_result = $this->iterator($xmlArray, "name", "original");
+
+        // return $data_result ? $data_result : Log::Error("Error on parsing xml");
         
     }
     

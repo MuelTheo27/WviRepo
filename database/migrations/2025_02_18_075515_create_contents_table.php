@@ -12,9 +12,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('content', function (Blueprint $table) {
-        $table->id('content_id');       
-        $table->string('pdf_link');
+        $table->id();       
+        $table->unsignedBigInteger("child_id");
+        $table->string('content_url');
+        $table->year("fiscal_year");
         $table->timestamps();
+        $table->foreign("child_id")->references("id")->on("children")->onDelete("cascade");
         });
     }
 

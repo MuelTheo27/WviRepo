@@ -222,6 +222,9 @@
                     successModal.show();
                 });
 
+            },
+            success : function(file, response){
+                console.log(response);
             }
         };
 
