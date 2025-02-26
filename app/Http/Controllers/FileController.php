@@ -5,6 +5,7 @@ use App\Http\Services\Apr\AprService;
 use App\Http\Services\Child\StoreChildren;
 use App\Http\Services\Content\StoreContent;
 use App\Http\Services\Sponsor\StoreSponsor;
+use App\Models\SponsorCategory;
 use Log;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use App\Http\Controllers\Data\ContentController;
@@ -19,12 +20,13 @@ class FileController extends Controller
     //
     protected $storeContent;
     protected $storeSponsor;
-
+    protected $aprService;
     protected $storeChildren;
     public function __construct() {
         $this->storeContent = new StoreContent();
         $this->storeSponsor = new StoreSponsor();
         $this->storeChildren = new StoreChildren();
+        $this->aprService = new AprService();
     }
 
     public function uploadXslx(Request $request) {
@@ -37,22 +39,24 @@ class FileController extends Controller
         try {
             $uploadedFile = $request->file("file");
             $processedData = (new ExcelService())->processExcel($uploadedFile);
-            
+      
             if (is_null($processedData)) {
                 return response()->json(['error' => 'Failed to process the Excel file'], 422);
             }
 
-            // $this->store(array_merge($processedData, [
-            //     "content_url" =>
-            // ]));
-
-            // return response()->json([
-            //     "uploadResponse" => [
-            //         "pdfPreview" => $responseData["previewData"],
-            //         "fileAmount" => $responseData["fileAmount"],
-            //         "pdfLinks" => $responseData["previewData"],
-            //     ]
-            //     ]);
+            if (is_array($processedData)) {
+                foreach ($processedData as $item) {
+                    $result = $this->store([
+                        "child_code" => $item["child_code"],
+                        "sponsor_name" => $item["sponsor_name"],
+                        "sponsor_category" => $item["sponsor_category"],
+                    ]);
+    
+                    if ($result instanceof Error) {
+                        throw new \Exception($result->getMessage());
+                    }
+                }
+            }
         }
         catch(\Throwable $th){
             error_log($th->getMessage());
@@ -60,42 +64,37 @@ class FileController extends Controller
         }
 
     }
-    /* function buat masukin hasil data proses excel ke database
-        bentuk array =
-        $record = [child_codes: [], sponsor_category: string, sponsor_name: string}
-    */
-    public function getExcelData($record){
-        
-        $aprService = new AprService();
-        $sponsor_id = SponsorController::storeSponsor($record["sponsor_name"], $record["sponsor_category"]);
-        $pdfUrlArray = [];
-      
-        // array_map(function($childcode) use ($aprService, $sponsor_id, &$pdfUrlArray){
-        //     $pdf_url = $aprService->getPdfUrl($childcode);
-           
-        //     $this->store([
-        //         ""
-        //     ])
-        // }, $record["child_codes"]);
-
-      
-    }
-
+  
     public function store(array $data){
-        
-        $sponsor = $this->storeSponsor->store($data["sponsor_name"], $data["sponsor_category_id"]);
-
-        $children = $this->storeChildren->store([
-            "child_code" => $data["child_code"],
-            "sponsor_id" => $sponsor->id
-        ]);
-
-        $content = $this->storeContent->store([
-            "child_id"   => $children->id,
-            "content_url"  => $data["content_url"],
-            "fiscal_year"  => $data["fiscal_year"]  
-        ]);
-
+        try {
+            return \DB::transaction(function () use ($data) {
+                $sponsor = $this->storeSponsor->store(
+                    $data["sponsor_name"],
+                    SponsorCategory::where("sponsor_category_name", $data["sponsor_category"])
+                        ->firstOrFail()->id
+                );
+    
+                $children = $this->storeChildren->store([
+                    "child_code" => $data["child_code"],
+                    "sponsor_id" => $sponsor->id
+                ]);
+    
+                $pdfUrl = $this->aprService->getPdfUrl($children->child_code);
+                if ($pdfUrl instanceof Error) {
+                    throw new \Exception($pdfUrl->getMessage());
+                }
+    
+                $content = $this->storeContent->store([
+                    "child_id"   => $children->id,
+                    "content_url"  => $pdfUrl,
+                    "fiscal_year"  => (int)date('m') >= 10 ? (int)date('Y') : (int)date('Y') - 1
+                ]);
+    
+                return $content; 
+            });
+        } catch (\Throwable $th) {
+            return new \Error($th->getMessage()); // Transaction will auto-rollback
+        }
     }
 
 }

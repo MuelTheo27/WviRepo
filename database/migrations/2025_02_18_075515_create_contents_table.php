@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('content', function (Blueprint $table) {
         $table->id();       
         $table->unsignedBigInteger("child_id");
-        $table->string('content_url');
+        $table->text('content_url');
         $table->year("fiscal_year");
         $table->timestamps();
         $table->foreign("child_id")->references("id")->on("children")->onDelete("cascade");

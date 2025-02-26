@@ -6,6 +6,7 @@ use App\Models\Child;
 use Illuminate\Http\Request;
 use App\Models\Sponsor;
 use App\Models\SponsorCategory;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class TableController extends Controller
 {
@@ -14,8 +15,24 @@ class TableController extends Controller
     */
     public function getTableData()
     {
-        $sponsors = Sponsor::with(['category', 'children'])->get();
-        return response()->json($sponsors);
+        
+        $data = Child::select('children.id', 'children.child_code', 'children.sponsor_id')
+        ->with([
+            'sponsor:id,name,sponsor_category_id', 
+            'sponsor.category:id,sponsor_category_name',
+            'content:id,child_id,fiscal_year'
+        ])
+        ->get()
+        ->map(function ($child) {
+            return [
+                'child_code' => $child->child_code,
+                'sponsor_name' => $child->sponsor->name,
+                'sponsor_category' => $child->sponsor->category->sponsor_category_name,
+                'fiscal_year' => $child->content->fiscal_year,
+            ];
+        });
+
+        return response()->json($data);
     }
 
     /*
@@ -31,40 +48,32 @@ class TableController extends Controller
     /*
     Function for searching sponsors
     */
-    public function searchSponsor(Request $request)
-    {
-        $query = $request->query('query'); 
-        dd($query);
-        $sponsors = Sponsor::where('sponsor_name', 'like', '%' . $query . '%')
-            ->orWhere('sponsor_id', 'like', '%' . $query . '%')
-            ->orWhereHas('category', function ($q) use ($query) {
-                $q->where('sponsor_category_name', 'like', '%' . $query . '%');
-            })
-            ->with(['category', 'children']) 
-            ->get();
-
-        
-       
-
-        return response()->json($sponsors);
-    }
-
-  
-    public function sortSponsor(Request $request)
-    {
-        $sortBy = $request->query('sort_by', 'created_at'); 
-        $order = $request->query('order', 'desc'); 
-        $validSortColumns = ['sponsor_id', 'sponsor_name', 'created_at'];
-        if (!in_array($sortBy, $validSortColumns)) {
-            $sortBy = 'created_at';
+    public function sortData(Request $request){
+        $sortOption = $request->query('order');
+    
+        if ($sortOption === null) {
+            return response()->json([], 400); 
         }
+    
+        $data = Child::select('children.id', 'children.child_code', 'children.sponsor_id')
+        ->with([
+            'sponsor:id,name,sponsor_category_id', 
+            'sponsor.category:id,sponsor_category_name',
+            'content:id,child_id,fiscal_year'
+        ])->orderBy('created_at', $sortOption)
+        ->get()
+        ->map(function ($child) {
+            return [
+                'child_code' => $child->child_code,
+                'sponsor_name' => $child->sponsor->name,
+                'sponsor_category' => $child->sponsor->category->sponsor_category_name,
+                'fiscal_year' => $child->content->fiscal_year,
+            ];
+        });
 
-        $sponsors = Sponsor::orderBy($sortBy, $order)
-            ->with(['category', 'children'])
-            ->get();
-
-        return response()->json($sponsors);
+        return response()->json($data);
     }
+    
 
     /*
     Function to add new sponsor data
@@ -80,6 +89,7 @@ class TableController extends Controller
         return response()->json($sponsor, 201);
     }
 
+    
     /*
     Function to delete a sponsor
     */

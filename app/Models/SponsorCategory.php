@@ -9,8 +9,9 @@ class SponsorCategory extends Model
 {
     use HasFactory;
     
+    protected $table = "sponsor_categories";
     protected $primaryKey = 'id';
-    // protected $fillable = ['sponsor_category_name'];
+    protected $fillable = ['sponsor_category_name'];
     
     public function sponsors()
     {

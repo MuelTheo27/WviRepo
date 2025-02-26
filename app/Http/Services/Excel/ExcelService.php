@@ -1,91 +1,89 @@
 <?php
+
 namespace App\Http\Services\Excel;
-use ErrorException;
+
 use Illuminate\Http\UploadedFile;
-use Maatwebsite\Excel\Facades\Excel;
-use PhpOffice\PhpSpreadsheet;
-use App\Imports\StudentImport;
-use App\Exports\StudentExport;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ExcelService
 {
-    protected $httpService;
-   
-    public function __construct()
+    public function getFileExtensions(UploadedFile $excel_file)
     {
-      
+        $extension = strtolower($excel_file->getClientOriginalExtension());
+
+        return match ($extension) {
+            "xlsx" => "Xlsx",
+            "csv"  => "Csv",
+            default => throw new \Exception("Unsupported file type")
+        };
     }
 
-    public function getFileExtensions(UploadedFile $excel_file){
-        if(strcmp($excel_file->getClientOriginalExtension(), "xlsx") == 0){
-            return "Xlsx";
-        }
-        else if(strcmp($excel_file->getClientOriginalExtension(), "csv") == 0){
-            return "Csv";
-        }
-        
-    }
-
-    public function getRequiredData(Worksheet $spreadsheet){
-        $first_row_child_code = 5;
-        $last_row_child_code = $spreadsheet->getHighestRow('A');
-        $child_codes = [];
-
-        for ($i=$first_row_child_code; $i <= $last_row_child_code; ++$i) { 
-            array_push($child_codes, $spreadsheet->getCell("A" . $i)->getValue());
-
-        }
-
-        return [
-            "sponsor_name" => $spreadsheet->getCell('B1')->getValue(),
-            "sponsor_category" => $spreadsheet->getCell('B2')->getValue(),
-            "child_codes" => $child_codes,
+    public function getRequiredData(Worksheet $spreadsheet)
+    {
+        $table = [
+            "child_code" => [],
+            "sponsor_category" => [],
+            "sponsor_name" => []
         ];
+
+        $index = 0;
+        foreach ($spreadsheet->getRowIterator() as $row) {  
+            if ($index === 0) { 
+                $index++; 
+                continue;
+            }
+
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(true);
+
+            $cellValues = [];
+            foreach ($cellIterator as $cell) {
+                $cellValues[] = $cell->getValue();
+            }
+
+            if (count($cellValues) >= 3) {
+                
+                array_push($table,["child_code" => $cellValues[0] ,
+                "sponsor_name" =>$cellValues[1],
+                "sponsor_category" => $cellValues[2]]);
+            }
+
+            $index++;
+        }
+
+        return $table;
     }
 
-    public function validateCellContent(array $content){
-        /* 
-        True kalau semua datanya ada isinya, False kalau ada data yang kosong isinya 
-        */
-        if(empty($content["child_codes"]) || !$content["sponsor_name"] || !$content["sponsor_category"]){
-            return false;
-        }
-        return true;
-    }
-    public function validateCellContentTag(Worksheet $spreadsheet): bool{
-        if($spreadsheet->getCell('A1')->getValue() !== "sponsor_name" || 
-           $spreadsheet->getCell('A2')->getValue() !== "sponsor_category" || 
-           $spreadsheet->getCell('A4')->getValue() !== "child_code" )
-        {
-            return false;
-        }
-
-        return true;
+    public function validateCellContentTag(Worksheet $spreadsheet): bool
+    {
+        return $spreadsheet->getCell('A1')->getValue() === "child_code" &&
+               $spreadsheet->getCell('B1')->getValue() === "sponsor_name" &&
+               $spreadsheet->getCell('C1')->getValue() === "sponsor_category";
     }
 
     public function processExcel(UploadedFile $excel_file)
     {
         try {
-            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($this->getFileExtensions($excel_file));
+            $reader = IOFactory::createReader($this->getFileExtensions($excel_file));
+            $reader->setReadDataOnly(true);
             $spreadsheet = $reader->load($excel_file->getPathname())->getActiveSheet();
             
-            if(!$this->validateCellContentTag($spreadsheet)){ 
+            if (!$this->validateCellContentTag($spreadsheet)) { 
                 throw new \Exception("Incorrect cell content"); 
             }
-            
-            $data = $this->getRequiredData($spreadsheet);
 
-            if(!$this->validateCellContent($data)){
-                throw new \Exception("An empty cell content exists");
-            }
-            
-            return $data;
+            $table = $this->getRequiredData($spreadsheet);
+            // if (!$table["child_code"] || !$table["sponsor_name"] || !$table["sponsor_category"]) {
+            //     throw new \Exception("An empty cell content exists");
+            // }
+
+            return $table;
             
         } catch (\Throwable $th) {
-            return $th;
+            return $th->getMessage();
         }
     }
 
-  
+    
 }

@@ -10,7 +10,7 @@ class StoreSponsor{
                 "name" => $name,
             ],
     [
-                "category_id" => $category_id
+                "sponsor_category_id" => $category_id
             ]);
             return $sponsor;
         });

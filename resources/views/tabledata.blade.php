@@ -57,14 +57,14 @@
             
             <div class="d-flex gap-2">
                 <select id="sortByDate" class="form-select">
-                    <option value="newest">Sort by Newest</option>
-                    <option value="oldest">Sort by Oldest</option>
+                    <option value="newest">asc</option>
+                    <option value="oldest">desc</option>
                 </select>
 
                 <select id="sortBySponsor" class="form-select">
-                    <option value="a">Sort by Sponsor A</option>
-                    <option value="b">Sort by Sponsor B</option>
-                    <option value="c">Sort by Sponsor C</option>
+                    <option value="a">Mass Sponsor</option>
+                    <option value="b">Middle Sponsor</option>
+                    <option value="c">Major Sponsor</option>
                 </select>
             </div>
 
@@ -85,9 +85,10 @@
                 @if(isset($children) && count($children) > 0)
                     @foreach ($children as $list)
                         <tr>
-                            <td>{{ $list->id }}</td>
-                            <td>{{ $list->sponsor_id }}</td>
+                            <td>{{ $list->child_code }}</td>
                             <td>{{ $list->sponsor_name }}</td>
+                            <td>{{ $list->sponsor_category }}</td>
+                            <td>{{ $list->fiscal_year }}</td>
                             <td>
                                 <button class="btn btn-primary btn-sm">Download</button>
                                 <button class="btn btn-danger btn-sm">Delete</button>
@@ -127,7 +128,7 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" id="cancelUploadButton" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="uploadButton">Upload</button>
                 </div>
             </div>
@@ -156,10 +157,12 @@
     <!-- Bootstrap & Dropzone JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @vite('resources/js/table.js')
     <script>
-                Dropzone.options.fileDropzone = {
+      
+            Dropzone.options.fileDropzone = {
             paramName: "file",
             maxFiles: null,  // Allows unlimited files
             acceptedFiles: ".xlsx",
@@ -198,27 +201,16 @@
                     fileList.appendChild(listItem);
                 });
 
+                $('#addSponsorModal').on('hidden.bs.modal', function () {
+                    $("#fileList").empty();
+                    uploadedFiles = [];
+                });
+              
                 document.getElementById("uploadButton").addEventListener("click", function () {
                     $("#fileList").empty();
                     uploadedFiles = [];
                     let uploadModal = bootstrap.Modal.getInstance(document.getElementById("addSponsorModal"));
                     uploadModal.hide();
-
-                    // Show the success modal
-                    fileSuccessList.innerHTML = "";
-                    let totalFiles = uploadedFiles.length;
-                    let displayedFiles = uploadedFiles.slice(0, 5);
-                    let remainingCount = totalFiles - displayedFiles.length;
-
-                    displayedFiles.forEach(file => {
-                        let item = document.createElement("li");
-                        item.textContent = file;
-                        fileSuccessList.appendChild(item);
-                    });
-
-                    moreFilesText.innerText = remainingCount > 0 ? `${remainingCount} files more available` : "";
-                    moreFilesText.style.display = remainingCount > 0 ? "block" : "none";
-
                     successModal.show();
                 });
 
@@ -237,16 +229,17 @@
                 let query = $(this).val();
 
                 $.ajax({
-                    url: "{{ route('sponsors.search') }}",
+                    url: "{{ route('data.search') }}",
                     type: "GET",
                     data: { query: query },
                     dataType: "json",
                     success: function (data) {
+                        console.log(data);
                         let tbody = $("#sponsorTable");
                         tbody.empty(); // Clear previous results
 
-                        if (data.children.length > 0) {
-                            data.children.forEach(function (sponsor) {
+                        if (data.length > 0) {
+                            data.forEach(function (sponsor) {
                                 tbody.append(`
                                     <tr>
                                         <td>${sponsor.id}</td>

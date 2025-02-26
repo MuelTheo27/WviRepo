@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AprController;
+use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TableController;
@@ -18,7 +19,6 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/search-sponsors', [SponsorController::class, 'search'])->name('sponsors.search');
 Route::get('/table', [SponsorController::class, 'index'])->name('table.index');
 
 
@@ -27,13 +27,16 @@ Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 Route::prefix("/api")->group(function () {
-    Route::post("/upload/xslx", [FileController::class, 'uploadXslx'])->name("upload.xlsx");
+    // Route::post("/upload/xslx", [FileController::class, 'uploadXslx'])->name("upload.xlsx");
+    Route::post("/upload/xslx", [FileController::class, "uploadXslx"])->name("upload.xlsx");
+
     Route::prefix("data")->group(function () {
-        Route::get("/index")->name("data.index");
-        Route::post("/search")->name("data.search");
-        Route::post("/sort")->name("data.sort");
+        Route::get("/index", [TableController::class, "getTableData"])->name("data.index");
+        Route::get("/search", [SponsorController::class, "searchSponsor" ])->name("data.search");
+        Route::get("/sort", [TableController::class, "sortData"])->name("data.sort");
+        Route::get("/filter", [SponsorController::class, "filterBySponsorCategory"]);
     });
-    Route::get("/download/xlsx")->name("download.xlsx");
+    Route::get("/download", [DownloadController::class, "handle"])->name("download.xlsx");
 });
 // });
 
