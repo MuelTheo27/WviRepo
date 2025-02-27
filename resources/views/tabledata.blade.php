@@ -157,7 +157,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        Dropzone.options.fileDropzone = {
+         Dropzone.options.fileDropzone = {
             paramName: "file",
             maxFiles: null,
             acceptedFiles: ".xlsx",
@@ -182,44 +182,44 @@
                         file.previewElement.remove();
                     }
 
-                    uploadedFiles.push(file.name);
+                    uploadedFiles.push(file);
 
                     let listItem = document.createElement("li");
                     listItem.innerHTML = `${file.name} <button class="remove-file">Remove</button>`;
                     listItem.querySelector(".remove-file").addEventListener("click", () => {
                         dropzoneInstance.removeFile(file);
                         listItem.remove();
-                        uploadedFiles = uploadedFiles.filter(f => f !== file.name);
+                        uploadedFiles = uploadedFiles.filter(f => f !== file);
                     });
 
                     fileList.appendChild(listItem);
                 });
 
                 document.getElementById("uploadButton").addEventListener("click", function () {
+                    if (uploadedFiles.length === 0) return;
+
                     $("#fileList").empty();
-                    uploadedFiles = [];
-                    let uploadModal = bootstrap.Modal.getInstance(document.getElementById("addSponsorModal"));
-                    uploadModal.hide();
 
-                    fileSuccessList.innerHTML = "";
-                    let totalFiles = uploadedFiles.length;
-                    let displayedFiles = uploadedFiles.slice(0, 5);
-                    let remainingCount = totalFiles - displayedFiles.length;
+                    uploadedFiles.forEach(file => {
+                        // Simulate upload process
+                        let isSuccess = Math.random() > 0.3; // Simulate success rate (70% success)
 
-                    displayedFiles.forEach(file => {
-                        let item = document.createElement("li");
-                        item.textContent = file;
-                        fileSuccessList.appendChild(item);
+                        let listItem = document.createElement("li");
+                        listItem.innerHTML = isSuccess
+                            ? `<span class="text-success fw-bold">${file.name} - Uploaded Successfully</span>`
+                            : `<span class="text-danger fw-bold">${file.name} - Upload Failed</span>`;
+                        
+                        listItem.style.backgroundColor = isSuccess ? "#d4edda" : "#f8d7da"; // Green for success, red for error
+                        fileList.appendChild(listItem);
                     });
 
-                    moreFilesText.innerText = remainingCount > 0 ? `${remainingCount} files more available` : "";
-                    moreFilesText.style.display = remainingCount > 0 ? "block" : "none";
-
-                    successModal.show();
+                    uploadedFiles = [];
                 });
             }
         };
+
     </script>
+
 
 </body>
     <script>
