@@ -91,6 +91,15 @@
       <input type="text" id="search" class="form-control w-25 ms-auto" placeholder="Search for sponsors..." />
     </div>
 
+    <!-- Selection Info -->
+    <div id="selectionInfo" class="alert alert-danger d-none d-flex align-items-center justify-content-between mb-3">
+      <span><span id="selectedCount">0</span> Selected</span>
+      <div>
+        <button id="downloadSelected" class="btn btn-outline-primary btn-sm me-2"> Download</button>
+        <button id="deleteSelected" class="btn btn-outline-danger btn-sm"> Delete</button>
+      </div>
+    </div>
+
     <!-- Select All Checkbox (for table with checkboxes) -->
     <div class="d-flex align-items-center gap-2 mb-3">
       <input type="checkbox" id="selectAll" /> <label for="selectAll">Select All</label>
@@ -166,6 +175,18 @@
       });
     }
 
+    // Function to update selection info
+    function updateSelectionInfo() {
+      let selectedCount = selectedItems.size;
+      document.getElementById("selectedCount").innerText = selectedCount;
+      document.getElementById("selectionInfo").classList.toggle("d-none", selectedCount === 0);
+    }
+
+    // Function to update Select All checkbox state
+    function updateSelectAllCheckbox() {
+      document.getElementById("selectAll").checked = selectedItems.size === sponsors.length;
+    }
+
     // Render Sponsor Table with pagination, checkboxes, delete buttons, etc.
     function renderTable(page) {
       const tableBody = document.getElementById("sponsorTable");
@@ -180,7 +201,7 @@
       // Pagination calculations
       let start = (page - 1) * itemsPerPage;
       let paginatedItems = filtered.slice(start, start + itemsPerPage);
-      
+
       paginatedItems.forEach((sponsor) => {
         let row = document.createElement("tr");
         row.innerHTML = `
@@ -198,7 +219,8 @@
       });
       attachCheckboxListeners();
       attachDeleteListeners();
-      updateSelectAllState();
+      updateSelectAllCheckbox();
+      updateSelectionInfo();
     }
 
     // Render Pagination Buttons based on filtered data
@@ -235,6 +257,7 @@
           selectedItems.delete(sponsorId);
           renderTable(currentPage);
           renderPagination();
+          updateSelectionInfo();
         });
       });
     }
@@ -249,17 +272,10 @@
           } else {
             selectedItems.delete(itemId);
           }
-          updateSelectAllState();
+          updateSelectAllCheckbox();
+          updateSelectionInfo();
         });
       });
-    }
-
-    // Update "Select All" checkbox state
-    function updateSelectAllState() {
-      const selectAllCheckbox = document.getElementById("selectAll");
-      let checkboxes = document.querySelectorAll(".row-checkbox");
-      let allChecked = Array.from(checkboxes).every((checkbox) => checkbox.checked);
-      selectAllCheckbox.checked = allChecked && checkboxes.length > 0;
     }
 
     // "Select All" checkbox functionality
@@ -270,6 +286,21 @@
         selectedItems.clear();
       }
       renderTable(currentPage);
+      updateSelectionInfo();
+    });
+
+    // Delete Selected functionality
+    document.getElementById("deleteSelected").addEventListener("click", function () {
+      sponsors = sponsors.filter(sponsor => !selectedItems.has(sponsor.id));
+      selectedItems.clear();
+      renderTable(currentPage);
+      renderPagination();
+      updateSelectionInfo();
+    });
+
+    // Download Selected functionality
+    document.getElementById("downloadSelected").addEventListener("click", function () {
+      alert("Downloading " + selectedItems.size + " items...");
     });
 
     // Search functionality (live filter)
@@ -298,7 +329,7 @@
         let dropzoneMessage = document.querySelector(".dz-message");
         dropzoneMessage.style.display = "block";
         let uploadedFiles = [];
-  
+
         this.on("addedfile", function (file) {
           // Remove default preview if exists
           if (file.previewElement) {
@@ -314,7 +345,7 @@
           });
           fileList.appendChild(listItem);
         });
-  
+
         // When Upload button is clicked inside the modal
         document.getElementById("uploadButton").addEventListener("click", function () {
           if (uploadedFiles.length === 0) return;
@@ -348,6 +379,13 @@
         });
       }
     };
+
+    // Clear file list and notifications when modal is closed
+    document.getElementById('addSponsorModal').addEventListener('hidden.bs.modal', function () {
+      document.getElementById('fileList').innerHTML = ''; // Clear file list
+      let dropzoneInstance = Dropzone.forElement("#fileDropzone");
+      dropzoneInstance.removeAllFiles(true); // Remove all files from Dropzone
+    });
   </script>
 </body>
 </html>
