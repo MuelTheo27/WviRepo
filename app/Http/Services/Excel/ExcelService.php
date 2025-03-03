@@ -5,9 +5,15 @@ namespace App\Http\Services\Excel;
 use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-
+use Symfony\Component\Console\Output\ConsoleOutput;
 class ExcelService
 {
+
+    protected $console;
+    public function __construct() {
+     
+        $this->console = new ConsoleOutput();
+    }
     public function getFileExtensions(UploadedFile $excel_file)
     {
         $extension = strtolower($excel_file->getClientOriginalExtension());
@@ -22,9 +28,6 @@ class ExcelService
     public function getRequiredData(Worksheet $spreadsheet)
     {
         $table = [
-            "child_code" => [],
-            "sponsor_category" => [],
-            "sponsor_name" => []
         ];
 
         $index = 0;
@@ -35,18 +38,23 @@ class ExcelService
             }
 
             $cellIterator = $row->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(true);
 
             $cellValues = [];
             foreach ($cellIterator as $cell) {
-                $cellValues[] = $cell->getValue();
+                $cellValue = $cell->getValue();
+                if(isset($cellValue)){
+                    array_push($cellValues, $cellValue);
+                }
             }
 
             if (count($cellValues) >= 3) {
-                
                 array_push($table,["child_code" => $cellValues[0] ,
                 "sponsor_name" =>$cellValues[1],
                 "sponsor_category" => $cellValues[2]]);
+            }
+
+            else{
+                throw new \Exception("An empty cell content exists");
             }
 
             $index++;
@@ -62,6 +70,18 @@ class ExcelService
                $spreadsheet->getCell('C1')->getValue() === "sponsor_category";
     }
 
+    public function validateExcel(UploadedFile $excel_file){
+        try {
+            $reader = IOFactory::createReader($this->getFileExtensions($excel_file));
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($excel_file->getPathname())->getActiveSheet();
+            if (!$this->validateCellContentTag($spreadsheet)) { 
+                throw new \Exception("Incorrect cell content"); 
+            }
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
     public function processExcel(UploadedFile $excel_file)
     {
         try {
@@ -74,14 +94,11 @@ class ExcelService
             }
 
             $table = $this->getRequiredData($spreadsheet);
-            // if (!$table["child_code"] || !$table["sponsor_name"] || !$table["sponsor_category"]) {
-            //     throw new \Exception("An empty cell content exists");
-            // }
-
+        
             return $table;
             
         } catch (\Throwable $th) {
-            return $th->getMessage();
+            throw new \Exception("Excel processing failed: " . $th->getMessage(), 0, $th);
         }
     }
 

@@ -7,45 +7,67 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
     <style>
-        .dropzone {
-            border: 2px dashed #ccc;
-            background: #f9f9f9;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            position: relative;
-        }
-        .dz-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none; /* Keep text visible */
-        }
-        .file-list {
-            margin-top: 10px;
-            padding: 0;
-        }
-        .file-list li {
-            list-style: none;
-            padding: 8px;
-            background: #eef;
-            margin-bottom: 5px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            font-size: 14px;
-        }
-        .remove-file {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+    .dropzone {
+      border: 2px dashed #ccc;
+      background: #f9f9f9;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .dz-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .file-list {
+      margin-top: 10px;
+      padding: 0;
+    }
+    .file-list li {
+      list-style: none;
+      padding: 8px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+    .remove-file {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .success-file {
+      background: #d4edda;
+    }
+    .error-file {
+      background: #f8d7da;
+    }
+    /* Pagination & Table Styles */
+    .pagination-btn {
+      padding: 5px 10px;
+      cursor: pointer;
+      border: 1px solid #007bff;
+      background: white;
+      color: #007bff;
+      margin: 2px;
+      border-radius: 5px;
+    }
+    .pagination-btn.active {
+      background: #007bff;
+      color: white;
+    }
+    .table-container {
+      max-height: 500px;
+      overflow-y: auto;
+    }
     </style>
 </head>
 <body class="bg-light p-5">
@@ -55,53 +77,56 @@
         <div class="d-flex align-items-center gap-2 mb-3">
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSponsorModal">Add New Data</button>
             
-            <div class="d-flex gap-2">
-                <select id="sortByDate" class="form-select">
-                    <option value="newest">asc</option>
-                    <option value="oldest">desc</option>
-                </select>
-
+            <div class="d-flex gap-2" style="width:12rem;">
                 <select id="sortBySponsor" class="form-select">
+                <option hidden disabled selected>Filter by Category</option>
+
                     <option value="a">Mass Sponsor</option>
                     <option value="b">Middle Sponsor</option>
                     <option value="c">Major Sponsor</option>
+
                 </select>
             </div>
 
             <input type="text" id="search" class="form-control w-25 ms-auto" placeholder="Search for sponsors...">
         </div>
 
+        <div id="selectionInfo" class="alert alert-danger d-none d-flex align-items-center justify-content-between mb-3">
+      <span><span id="selectedCount">0</span> Selected</span>
+      <div>
+        <button id="downloadSelected" class="btn btn-outline-primary btn-sm me-2"> Download</button>
+        <!-- <button id="deleteSelected" class="btn btn-outline-danger btn-sm"> Delete</button> -->
+      </div>
+    </div>
+
+    <!-- Select All Checkbox (for table with checkboxes) -->
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <input type="checkbox" id="selectAll" /> <label for="selectAll">Select All</label>
+    </div>
                 <!-- Sponsor Table -->
-                        <table class="table table-bordered mt-3">
-            <thead class="table-light">
-                <tr>
-                    <th>Child Code</th>
-                    <th>Sponsor ID</th>
-                    <th>Sponsor Name</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="sponsorTable">
-                @if(isset($children) && count($children) > 0)
-                    @foreach ($children as $list)
-                        <tr>
-                            <td>{{ $list->child_code }}</td>
-                            <td>{{ $list->sponsor_name }}</td>
-                            <td>{{ $list->sponsor_category }}</td>
-                            <td>{{ $list->fiscal_year }}</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm">Download</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </td>
-                        </tr>
-                    @endforeach
-                @else
-                    <tr><td colspan="4" class="text-center">No data available</td></tr>
-                @endif
-            </tbody>
+                <div class="table-container">
+      <table class="table table-bordered mt-3">
+        <thead class="table-light">
+          <tr>
+            <th>Select</th>
+            <th style="display:flex; justify-content: space-between; align-items: center;">Child Code
+            <div style=" display: inline-flex; flex-direction: column; padding: 4px; border-radius: 4px; background-color: white;" id="sortButton">
+              <button style="background: none; border: none; font-size: 8px; cursor: pointer; padding: 0; line-height: 0.8;">▲</button>
+              <button style="background: none; border: none; font-size: 8px; cursor: pointer; padding: 0; line-height: 0.8;">▼</button>
+            </div>
+            </th>
+            <th>Sponsor ID</th>
+            <th>Sponsor Name</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="sponsorTable">
+          <!-- Data populated via JS -->
+        </tbody>
+      </table>
 
-        </table>
-
+        <div id="pagination" class="d-flex gap-2 mt-3"></div>
     </div>
 
     <!-- Bootstrap Modal for "Add New Data" with Drag & Drop -->
@@ -115,15 +140,11 @@
                 <div class="modal-body">
                     <p class="text-muted">Files should be <strong>.xlsx</strong></p>
 
-                    <!-- Dropzone Upload (No Thumbnail Preview) -->
-                    <form action="{{ route('upload.xlsx') }}" class="dropzone" id="fileDropzone">
+                    <div id="fileDropzone" class="dropzone"> 
                         @csrf
                         <div class="dz-message">
-                            <p>Drag and drop files here</p>
-                        </div>
-                    </form>
-
-                    <!-- List of Uploaded Files -->
+                          <p>Drag and drop files here</p>
+                        </div></div>
                     <ul id="fileList" class="file-list"></ul>
 
                 </div>
@@ -155,114 +176,17 @@
     </div>
 
     <!-- Bootstrap & Dropzone JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     @vite('resources/js/table.js')
-    <script>
-      
-            Dropzone.options.fileDropzone = {
-            paramName: "file",
-            maxFiles: null,  // Allows unlimited files
-            acceptedFiles: ".xlsx",
-            previewsContainer: null,  // Prevents Dropzone from adding previews
-            createImageThumbnails: false,  // Disables image thumbnails
-            addRemoveLinks: false,
-
-            init: function () {
-                let dropzoneInstance = this;
-                let fileList = document.getElementById("fileList");
-                let dropzoneMessage = document.querySelector(".dz-message");
-                let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessModal"));
-                let fileSuccessList = document.getElementById("fileSuccessList");
-                let moreFilesText = document.getElementById("moreFilesText");
-
-                dropzoneMessage.style.display = "block";
-
-                let uploadedFiles = [];
-
-                this.on("addedfile", function (file) {
-                   
-                    if (file.previewElement) {
-                        file.previewElement.remove();
-                    }
-
-                    uploadedFiles.push(file.name);
-
-                    let listItem = document.createElement("li");
-                    listItem.innerHTML = `${file.name} <button class="remove-file">Remove</button>`;
-                    listItem.querySelector(".remove-file").addEventListener("click", () => {
-                        dropzoneInstance.removeFile(file);
-                        listItem.remove();
-                        uploadedFiles = uploadedFiles.filter(f => f !== file.name);
-                    });
-
-                    fileList.appendChild(listItem);
-                });
-
-                $('#addSponsorModal').on('hidden.bs.modal', function () {
-                    $("#fileList").empty();
-                    uploadedFiles = [];
-                });
-              
-                document.getElementById("uploadButton").addEventListener("click", function () {
-                    $("#fileList").empty();
-                    uploadedFiles = [];
-                    let uploadModal = bootstrap.Modal.getInstance(document.getElementById("addSponsorModal"));
-                    uploadModal.hide();
-                    successModal.show();
-                });
-
-            },
-            success : function(file, response){
-                console.log(response);
-            }
-        };
-
-    </script>
+    @vite('resources/js/upload.js')
 
 </body>
-    <script>
-        $(document).ready(function () {
-            $('#search').on('keyup', function () {
-                let query = $(this).val();
-
-                $.ajax({
-                    url: "{{ route('data.search') }}",
-                    type: "GET",
-                    data: { query: query },
-                    dataType: "json",
-                    success: function (data) {
-                        console.log(data);
-                        let tbody = $("#sponsorTable");
-                        tbody.empty(); // Clear previous results
-
-                        if (data.length > 0) {
-                            data.forEach(function (sponsor) {
-                                tbody.append(`
-                                    <tr>
-                                        <td>${sponsor.id}</td>
-                                        <td>${sponsor.sponsor_id ?? 'N/A'}</td>
-                                        <td>${sponsor.sponsor_name}</td>
-                                        <td>
-                                            <button class="btn btn-primary btn-sm">Download</button>
-                                            <button class="btn btn-danger btn-sm">Delete</button>
-                                        </td>
-                                    </tr>
-                                `);
-                            });
-                        } else {
-                            tbody.append(`<tr><td colspan="4" class="text-center">No sponsors found</td></tr>`);
-                        }
-                    },
-                    error: function (xhr) {
-                        console.log("Error: ", xhr.responseText);
-                    }
-                });
-            });
-        });
-    </script>
+    
 
 
 </html>

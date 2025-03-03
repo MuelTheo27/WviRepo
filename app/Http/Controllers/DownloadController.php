@@ -13,6 +13,9 @@ class DownloadController extends Controller
         $child_code = $request->query("child_code");
         $child = Child::where("child_code", $child_code)->with("content")->first();
      
+        if(!$child){
+            return response()->json(['error' => 'Child code not found !'], 422);
+        }
         $file = Http::get($child->content->content_url);
 
         return Response::make($file->body(), 200, [

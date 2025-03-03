@@ -27,17 +27,11 @@ Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 Route::prefix("/api")->group(function () {
-    // Route::post("/upload/xslx", [FileController::class, 'uploadXslx'])->name("upload.xlsx");
-    Route::post("/upload/xslx", [FileController::class, "uploadXslx"])->name("upload.xlsx");
-
-    Route::prefix("data")->group(function () {
-        Route::get("/index", [TableController::class, "getTableData"])->name("data.index");
-        Route::get("/search", [SponsorController::class, "searchSponsor" ])->name("data.search");
-        Route::get("/sort", [TableController::class, "sortData"])->name("data.sort");
-        Route::get("/filter", [SponsorController::class, "filterBySponsorCategory"]);
-    });
+    Route::post("/upload/xlsx", [FileController::class, "uploadXslx"])->name("upload.xlsx");
+    Route::get("/results", [TableController::class, "getTableData"]);
     Route::get("/download", [DownloadController::class, "handle"])->name("download.xlsx");
-});
+    Route::get("/delete", [TableController::class, "deleteData"])
+;});
 // });
 
 

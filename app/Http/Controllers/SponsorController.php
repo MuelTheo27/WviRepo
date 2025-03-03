@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sponsor;
 use App\Models\Child;
+use Symfony\Component\Console\Output\ConsoleOutput;
 class SponsorController extends Controller
 {
     public function searchSponsor(Request $request)
     {
         $query = $request->query('query'); // Replace this with the actual search query
-
 $data = Child::select('children.id', 'children.child_code', 'children.sponsor_id')
     ->whereHas('sponsor', function ($q) use ($query) {
         $q->where('name', 'LIKE', "%$query%"); // Use `name`, not `sponsor_name`
