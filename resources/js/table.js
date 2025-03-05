@@ -79,7 +79,8 @@ $(document).on("click", "#downloadSelected", function() {
       const item = selectedItems.get(index);
       
       if (item && item.selected) {
-        selectedChildData.push(item)
+        // selectedChildData.push(item)
+        handleDownload(item)
       }
     });
     
@@ -92,7 +93,7 @@ $(document).on("click", "#downloadSelected", function() {
             .
         }
     */
-    handleDownload(selectedChildData)
+    // handleDownload(selectedChildData)
 
   });
  
