@@ -69,6 +69,7 @@ $(document).on("change", "#selectAll", function() {
 
 });
 
+/* event button buat download banyak file */
 $(document).on("click", "#downloadSelected", function() {
     const selectedChildData = [];
   
@@ -78,9 +79,20 @@ $(document).on("click", "#downloadSelected", function() {
       const item = selectedItems.get(index);
       
       if (item && item.selected) {
-        handleDownload(data.child_code)
+        selectedChildData.push(item)
       }
     });
+    
+    /* jadiin selectedChildData JSON
+
+        Bentuk JSON =
+        child_code : {
+            "10281-120812",
+            .
+            .
+        }
+    */
+    handleDownload(selectedChildData)
 
   });
  
@@ -207,14 +219,21 @@ async function handleDelete(child_code){
     populateChildrenTable()
 }
 
-async function handleDownload(child_code) {
-    if (!child_code) {
-        console.error("child_code is required");
+/* 
+    handleDownload(json_data)
+
+*/
+async function handleDownload(json_data) {
+    if (!json_data) {
+        console.error("data is required");
         return;
     }
 
     try {
-        // Fetch file from the backend
+        
+        /* Update : Harus kirim JSON, bukan parameter lagi
+        handleDownload udah nerima jsonnya, tinggal di kirim pas lagi fetch
+        */
         const response = await fetch(`api/download?child_code=${encodeURIComponent(child_code)}`);
 
         if (!response.ok) {
@@ -228,7 +247,6 @@ async function handleDownload(child_code) {
         const link = document.createElement('a');
         link.href = url;
 
-        // Extract filename from Content-Disposition header (if available)
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = 'downloaded_file';
         if (contentDisposition) {

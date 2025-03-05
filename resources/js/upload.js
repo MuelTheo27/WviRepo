@@ -63,7 +63,7 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
             $("#fileList").empty();
             uploadedFiles = [];
             dropzoneInstance.removeAllFiles();
-            $("#uploadButton").prop("disabled", true);
+            $("#uploadButton").prop("disabled", false);
             
         });
       
@@ -80,7 +80,7 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
         uploadModal.hide();
         this.removeFile(file)
         console.log(response)
-        // successModal.show();
+        successModal.show();
         $("#uploadButton").prop("disabled", false);
         window.populateChildrenTable()
     }

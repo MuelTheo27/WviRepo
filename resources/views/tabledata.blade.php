@@ -88,10 +88,8 @@
                 </select>
             </div>
 
-    <!-- Select All Checkbox (for table with checkboxes) -->
-    <div class="d-flex align-items-center gap-2 mb-3">
-      <input type="checkbox" id="selectAll" /> <label for="selectAll">Select All</label>
-    </div>
+            <input type="text" id="search" class="form-control w-25 ms-auto" placeholder="Search for sponsors...">
+        </div>
 
         <div id="selectionInfo" class="alert alert-danger d-none d-flex align-items-center justify-content-between mb-3">
       <span><span id="selectedCount">0</span> Selected</span>

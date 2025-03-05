@@ -16,11 +16,22 @@ class DownloadController extends Controller
         if(!$child){
             return response()->json(['error' => 'Child code not found !'], 422);
         }
-        $file = Http::get($child->content->content_url);
 
-        return Response::make($file->body(), 200, [
-            'Content-Type' => $file->header('Content-Type'),
-            'Content-Disposition' => 'attachment; filename="Annual_Progress_Report='.$child_code.'"',
-        ]);
+        /*if-else disini, kalau isi json cuman 1, jalanin kode bawah, kalau lebih dari 1, zip dulu */
+
+        // if(){
+
+            $file = Http::get($child->content->content_url);
+
+            return Response::make($file->body(), 200, [
+                'Content-Type' => $file->header('Content-Type'),
+                'Content-Disposition' => 'attachment; filename="Annual_Progress_Report='.$child_code.'"',
+            ]);
+
+        // }
+
+        // else{
+
+        // }
     }   
 }
