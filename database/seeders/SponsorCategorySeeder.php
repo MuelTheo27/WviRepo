@@ -24,7 +24,11 @@ class SponsorCategorySeeder extends Seeder
             [
                 "id" => 3,
                 "sponsor_category_name" => "Major Sponsor"
-            ]
+            ],
+            [
+                "id" => 4,
+                "sponsor_category_name" => "Hardcopy"
+            ],
         ]);
             
     }   

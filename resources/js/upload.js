@@ -24,7 +24,10 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
         let dropzoneMessage = document.querySelector(".dz-message");
         let fileSuccessList = document.getElementById("fileSuccessList");
         let moreFilesText = document.getElementById("moreFilesText");
-
+        let totalFiles = 0;
+        let successCount = 0;
+        let failCount = 0;
+        let partialSuccessCount = 0;
         dropzoneMessage.style.display = "block";
     
         let uploadedFiles = [];
@@ -79,7 +82,13 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
         let uploadModal = bootstrap.Modal.getInstance(document.getElementById("addSponsorModal"));
         uploadModal.hide();
         this.removeFile(file)
-        console.log(response)
+        document.getElementById("uploadSummary").innerHTML = `
+                <p>Total Uploaded: ${totalFiles}</p>
+                <p class="text-success">Successful Uploads: ${successCount}</p>
+                <p class="text-warning">Partial Uploads: ${partialSuccessCount}</p>
+                <p class="text-danger">Failed Uploads: ${failCount}</p>
+            `;
+
         successModal.show();
         $("#uploadButton").prop("disabled", false);
         window.populateChildrenTable()

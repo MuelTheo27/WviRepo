@@ -45,6 +45,7 @@ class ExcelService
                 if(isset($cellValue)){
                     array_push($cellValues, $cellValue);
                 }
+                $this->console->writeln(print_r($cellValues, true));
             }
 
             if (count($cellValues) >= 3) {
@@ -54,7 +55,7 @@ class ExcelService
             }
 
             else{
-                throw new \Exception("An empty cell content exists");
+                // throw new \Exception("An empty cell content exists");
             }
 
             $index++;

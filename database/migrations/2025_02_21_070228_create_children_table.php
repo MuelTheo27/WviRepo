@@ -12,19 +12,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('children', function (Blueprint $table) {
-            // $table->id();
-            // $table->string('child_code')->unique();
-            // $table->unsignedBigInteger("sponsor_id");
-            // $table->foreign('sponsor_id')->on("sponsors")->references("id")->onDelete("cascade");
-            // $table->foreign('sponsor_id')->on("sponsors")->references("sponsor_id")->onDelete("cascade");
-            // $table->unsignedBigInteger("content_id");
-            // $table->foreign('content_id')->on("content")->references("content_id")->onDelete("cascade");
-            // $table->timestamps();
-
             $table->id();
             $table->string('child_code')->unique();
-            $table->foreignId("sponsor_id")->constrained("sponsors")->onDelete("cascade");
-            $table->unsignedBigInteger("content_id"); // Tambahkan kolom saja dulu
+            $table->unsignedBigInteger("sponsor_id");
+            $table->foreign('sponsor_id')->on("sponsors")->references("id")->onDelete("cascade");
             $table->timestamps();
         });
     }

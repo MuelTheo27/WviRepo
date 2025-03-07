@@ -19,20 +19,20 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 Route::prefix("/api")->group(function () {
     Route::post("/upload/xlsx", [FileController::class, "uploadXslx"])->name("upload.xlsx");
     Route::get("/results", [TableController::class, "getTableData"]);
-    Route::get("/download", [DownloadController::class, "handle"])->name("download.xlsx");
+    Route::post("/download", [DownloadController::class, "handle"])->name("download.xlsx");
     Route::get("/delete", [TableController::class, "deleteData"])
 ;});
 Route::get("/table", function () {
     return view("tabledata");
 });
-});
+// });
 require __DIR__.'/auth.php';
 Route::get('admin/dashboard',[AdminController::class,'index'])->name('admin.home');
 

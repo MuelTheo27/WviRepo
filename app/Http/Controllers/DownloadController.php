@@ -5,54 +5,59 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Response;
 use App\Models\Child;
-use App\Services\Zip\ZipService;
-
+use App\Http\Services\Zip\ZipService;
+use Symfony\Component\Console\Output\ConsoleOutput;
 class DownloadController extends Controller
 {
     protected $zipService;
-
+    protected $console;
     public function __construct(ZipService $zipService)
     {
         $this->zipService = $zipService;
+        $this->console = new ConsoleOutput();
     }
 
     public function handle(Request $request)
     {
-        $child_code = $request->query("child_code");
-        $child = Child::where("child_code", $child_code)->with("content")->first();
-
-        if (!$child) {
+        $child_code = (array) $request->json("child_code");
+        if (!$child_code) {
             return response()->json(['error' => 'Child code not found!'], 422);
         }
 
-        // Get the content associated with the child
-        $contentList = $child->content; // Assuming content is a collection or array
+        $children = Child::whereIn("child_code", $child_code)->with(["content", "sponsor"])->get();
+      
+        $sponsorData = [];
+        $categoryName = "";
+        foreach ($children as $child) {
+            if ($child->sponsor && $child->content) {
+                $sponsorName = $child->sponsor->name;
+                $categoryName = $child->sponsor->category->name;
+                if (!isset($sponsorData[$sponsorName])) {
+                    $sponsorData[$sponsorName] = [];
+                }
+        
+                $sponsorData[$sponsorName][] = $child->content->content_url;
+            }
+        }
 
-        // Check if the content is a single file or multiple files
-        if ($contentList->count() == 1) {
+        if (count($child_code) === 1) {
             // Single file case
-            $file = Http::get($contentList->first()->content_url);
+       
+            $firstFile =  array_values(array_values($sponsorData)[0])[0];
+
+            $file = Http::get( $firstFile);
 
             return Response::make($file->body(), 200, [
                 'Content-Type' => $file->header('Content-Type'),
-                'Content-Disposition' => 'attachment; filename="Annual_Progress_Report=' . $child_code . '.pdf"',
+                'Content-Disposition' => 'attachment; filename="Annual_Progress_Report=' . $firstFile . '.pdf"',
             ]);
         } else {
-            // Multiple files case - ZIP and download
-            $sponsorData = [];
-            foreach ($contentList as $content) {
-                $sponsorData[$content->name] = [
-                    'sponsor_id' => $content->id,
-                    'files' => [$content->content_url],
-                ];
-            }
-
-            // Generate ZIP
-            $zipFileName = 'Annual_Progress_Reports_' . $child_code . '.zip';
-            $zipFilePath = $this->zipService->createZipFromSponsors($sponsorData, $zipFileName);
+            $zipFileName = 'Annual_Progress_Reports_' . '.zip';
+            $zipFilePath = $this->zipService->createZipFromSponsors($sponsorData, $zipFileName, $categoryName);
 
             // Return the zipped file for download
             return response()->download($zipFilePath)->deleteFileAfterSend(true);
         }
+    
     }
 }

@@ -2,7 +2,7 @@
 namespace App\Http\Services\Zip;
 
 use ZipArchive;
-
+use Illuminate\Support\Facades\Http;
 class ZipService
 {
     /**
@@ -13,13 +13,11 @@ class ZipService
      * @return string Path to the ZIP file.
      * @throws \Exception
      */
-    public function createZipFromSponsors(array $sponsors, $zipFileName)
+    public function createZipFromSponsors(array $sponsors, $zipFileName, $categoryName)
     {
-        // Create a temporary directory to store downloaded files.
         $tempDir = storage_path('app/temp/' . uniqid());
         mkdir($tempDir, 0777, true);
 
-        // Create a new ZipArchive object
         $zip = new ZipArchive();
         $zipFilePath = storage_path("app/public/{$zipFileName}");
 
@@ -27,25 +25,41 @@ class ZipService
             throw new \Exception('Could not create ZIP file.');
         }
 
-        // Download each file, create folders by sponsor name, and add to ZIP
-        foreach ($sponsors as $sponsorName => $sponsorData) {
-            $sponsorFolder = "{$sponsorName}-{$sponsorData['sponsor_id']}";
-            $sponsorFolderPath = "{$tempDir}/{$sponsorFolder}";
-            mkdir($sponsorFolderPath, 0777, true);
-
-            foreach ($sponsorData['files'] as $fileUrl) {
-                // Download file content
-                $fileContent = file_get_contents($fileUrl);
-                $fileName = basename($fileUrl);
-
-                // Save the file temporarily
-                $tempFilePath = "{$sponsorFolderPath}/{$fileName}";
-                file_put_contents($tempFilePath, $fileContent);
-
-                // Add the file to the ZIP under the sponsor folder
-                $zip->addFile($tempFilePath, "{$sponsorFolder}/{$fileName}");
+        if($categoryName === "Hardcopy"){
+            foreach ($sponsors as $sponsorName => $contents) {
+                foreach ($contents as $content_url) {
+                    $response = Http::get($content_url);
+                    if ($response->successful()) {
+                        $fileName = basename($content_url);
+                        $tempFilePath = storage_path("app/temp/{$fileName}");
+            
+                        file_put_contents($tempFilePath, $response->body());
+                        $zip->addFile($tempFilePath, $fileName);
+            
+                        unlink($tempFilePath);
+                    }
+                }
             }
         }
+
+        else{
+            foreach ($sponsors as $sponsorName => $contents) {
+                $sponsorFolder = "{$sponsorName}";
+                $sponsorFolderPath = "{$tempDir}/{$sponsorFolder}";
+                mkdir($sponsorFolderPath, 0777, true);
+
+                foreach ($contents as $content_url) {
+                    $fileContent =  Http::get($content_url);
+                    $fileName = basename($content_url);
+
+                    $tempFilePath = "{$sponsorFolderPath}/{$fileName}";
+                    file_put_contents($tempFilePath, $fileContent);
+
+                    $zip->addFile($tempFilePath, "{$sponsorFolder}/{$fileName}");
+                }
+            }
+    }
+
 
         // Close the ZIP archive
         $zip->close();

@@ -4,9 +4,13 @@
     let sortOrder = "asc";
 
     $(document).ready(function() {
-        $("#selectAll").prop("disabled", true);
+        $("#selectAll").prop("disabled", true)
+        $("#selectAll").prop("checked", false);
         populateChildrenTable();
         $("#sortBySponsor").prop("selectedIndex", 0);
+        selectedItems = new Map();
+        child_data = [];
+        url_params = {};
     });
 
     $("#sortBySponsor").change(function() {
@@ -15,7 +19,7 @@
             "Middle Sponsor": 2,
             "Major Sponsor": 3
         };
-
+        $("#selectAll").prop("disabled", false);
         var selectedText = $("#sortBySponsor option:selected").text();
         var mappedValue = sponsorMapping[selectedText] || 0
 
@@ -77,16 +81,16 @@ $(document).on("click", "#downloadSelected", function() {
         const item = selectedItems.get(index);
 
         if (item && item.selected) {
-            selectedChildData.push(item);
+            selectedChildData.push(data);
         }
     });
 
-    // Buat objek JSON dari selectedChildData
+    // // Buat objek JSON dari selectedChildData
     const jsonData = {
         child_code: selectedChildData.map(item => item.child_code)
     };
 
-    // Panggil fungsi handleDownload dengan JSON yang telah dibuat
+    // // Panggil fungsi handleDownload dengan JSON yang telah dibuat
     handleDownload(jsonData);
 });
 
@@ -118,7 +122,7 @@ window.populateChildrenTable = async function (){
                 selectedItems.set(i, {selected: false });
             }
             renderChildrenTable();
-            $("#selectAll").prop("disabled", false);
+            
 
         }
     })
@@ -165,8 +169,10 @@ function renderChildrenTable() {
             .addClass('btn btn-primary btn-sm')
             .text('Download')
             .on('click', function() {
-                console.log(child.child_code);
-                handleDownload(child.child_code);
+                const jsonData = {
+                    child_code: child.child_code
+                };
+                handleDownload(jsonData);
             });
 
         const $deleteButton = $('<button>')
@@ -222,17 +228,18 @@ async function handleDownload(json_data) {
         console.error("data is required");
         return;
     }
-
     try {
         // Kirim data JSON menggunakan metode POST
         const response = await fetch('api/download', {
             method: 'POST', // Gunakan POST untuk mengirim data JSON
             headers: {
                 'Content-Type': 'application/json', // Tentukan tipe konten sebagai JSON
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') // Add CSRF token
             },
             body: JSON.stringify(json_data), // Konversi objek JSON ke string
         });
 
+        console.log(response)
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -260,8 +267,8 @@ async function handleDownload(json_data) {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(link);
     } catch (error) {
-        console.error("Download failed:", error);
-        alert("Failed to download file.");
+        // console.error("Download failed:", error);
+        // alert("Failed to download file.");
     }
 }
 
