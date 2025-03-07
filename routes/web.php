@@ -19,10 +19,7 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/table', [SponsorController::class, 'index'])->name('table.index');
-
-
-// Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -32,15 +29,11 @@ Route::prefix("/api")->group(function () {
     Route::get("/download", [DownloadController::class, "handle"])->name("download.xlsx");
     Route::get("/delete", [TableController::class, "deleteData"])
 ;});
-// });
-
-
 Route::get("/table", function () {
     return view("tabledata");
 });
-Route::get('/api/test',[AprService::class,'getPdfUrl'])->name('Api.Test');
+});
 require __DIR__.'/auth.php';
-
 Route::get('admin/dashboard',[AdminController::class,'index'])->name('admin.home');
 
 

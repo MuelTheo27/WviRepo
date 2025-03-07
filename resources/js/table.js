@@ -2,7 +2,7 @@
     let child_data = []
     let selectedItems = new Map();
     let sortOrder = "asc";
-    
+
     $(document).ready(function() {
         $("#selectAll").prop("disabled", true);
         populateChildrenTable();
@@ -17,15 +17,15 @@
         };
 
         var selectedText = $("#sortBySponsor option:selected").text();
-        var mappedValue = sponsorMapping[selectedText] || 0  
-       
+        var mappedValue = sponsorMapping[selectedText] || 0
+
         filterSponsor(mappedValue).then(()=>{
             allSelectedFalse()
             updateSelectionInfo()
         }
 
-        ); 
-    
+        );
+
     });
 
     $(document).on("change", ".row-checkbox", function() {
@@ -36,7 +36,7 @@
         selectedItems.get(itemId).selected = false
     }
     updateSelectionInfo()
-   
+
     });
 
 
@@ -49,60 +49,53 @@ function allSelectedFalse(){
     selectedItems.forEach((item)=>{
         item.selected = false})
 }
-$(document).on("change", "#selectAll", function() { 
-   
+$(document).on("change", "#selectAll", function() {
+
     let isChecked = this.checked;
     if(isChecked){
     selectedItems.forEach((item)=>{
         item.selected = true})
-        
+
     }
 
     else{
         selectedItems.forEach((item)=>{
         item.selected = false})
-        
+
     }
     updateSelectionInfo()
     renderChildrenTable()
-    
+
 
 });
 
-/* event button buat download banyak file */
 $(document).on("click", "#downloadSelected", function() {
     const selectedChildData = [];
-  
-   
+
+    // Loop melalui child_data untuk memeriksa item yang dipilih
     child_data.forEach((data, index) => {
- 
-      const item = selectedItems.get(index);
-      
-      if (item && item.selected) {
-        // selectedChildData.push(item)
-        handleDownload(item)
-      }
-    });
-    
-    /* jadiin selectedChildData JSON
+        const item = selectedItems.get(index);
 
-        Bentuk JSON =
-        child_code : {
-            "10281-120812",
-            .
-            .
+        if (item && item.selected) {
+            selectedChildData.push(item);
         }
-    */
-    // handleDownload(selectedChildData)
+    });
 
-  });
- 
+    // Buat objek JSON dari selectedChildData
+    const jsonData = {
+        child_code: selectedChildData.map(item => item.child_code)
+    };
+
+    // Panggil fungsi handleDownload dengan JSON yang telah dibuat
+    handleDownload(jsonData);
+});
+
     $("#sortButton").on("click", function (e) {
         e.stopPropagation();
         console.log(sortOrder)
         sortOrder = sortOrder === "desc" ? "asc" : "desc";
         sortData(sortOrder)
-       
+
     });
 
 $('#search').on('keyup', function () {
@@ -120,7 +113,7 @@ window.populateChildrenTable = async function (){
         success : function(data){
             selectedItems.clear()
             child_data = data;
-            
+
             for(let i = 0; i < child_data.length; ++i){
                 selectedItems.set(i, {selected: false });
             }
@@ -131,12 +124,12 @@ window.populateChildrenTable = async function (){
     })
 }
 
-const itemsPerPage = 1; 
+const itemsPerPage = 1;
 let currentPage = 1;
 
 function renderChildrenTable() {
     const $tableBody = $('#sponsorTable');
-    const $paginationContainer = $('#pagination'); 
+    const $paginationContainer = $('#pagination');
     $tableBody.empty();
     $paginationContainer.empty();
 
@@ -157,7 +150,7 @@ function renderChildrenTable() {
             $('<input>', {
                 type: 'checkbox',
                 class: 'row-checkbox',
-                'data-id': startIndex + index, 
+                'data-id': startIndex + index,
                 checked: selectedItems.get(startIndex + index).selected
             })
         ));
@@ -195,7 +188,7 @@ function renderChildrenTable() {
             class: `pagination-btn ${i === currentPage ? "active" : ""}`,
             click: function() {
                 currentPage = i;
-                renderChildrenTable(); 
+                renderChildrenTable();
             }
         });
 
@@ -220,7 +213,7 @@ async function handleDelete(child_code){
     populateChildrenTable()
 }
 
-/* 
+/*
     handleDownload(json_data)
 
 */
@@ -231,11 +224,14 @@ async function handleDownload(json_data) {
     }
 
     try {
-        
-        /* Update : Harus kirim JSON, bukan parameter lagi
-        handleDownload udah nerima jsonnya, tinggal di kirim pas lagi fetch
-        */
-        const response = await fetch(`api/download?child_code=${encodeURIComponent(child_code)}`);
+        // Kirim data JSON menggunakan metode POST
+        const response = await fetch('api/download', {
+            method: 'POST', // Gunakan POST untuk mengirim data JSON
+            headers: {
+                'Content-Type': 'application/json', // Tentukan tipe konten sebagai JSON
+            },
+            body: JSON.stringify(json_data), // Konversi objek JSON ke string
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -243,11 +239,12 @@ async function handleDownload(json_data) {
 
         const blob = await response.blob();
 
-        // Create a temporary download link
+        // Buat link sementara untuk download
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
 
+        // Ambil nama file dari header Content-Disposition
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = 'downloaded_file';
         if (contentDisposition) {
@@ -255,11 +252,11 @@ async function handleDownload(json_data) {
             if (match) filename = match[1];
         }
 
-        link.download = filename; // Set filename
+        link.download = filename; // Set nama file
         document.body.appendChild(link);
-        link.click(); // Trigger the download
+        link.click(); // Mulai download
 
-        // Cleanup
+        // Bersihkan
         window.URL.revokeObjectURL(url);
         document.body.removeChild(link);
     } catch (error) {
@@ -267,7 +264,6 @@ async function handleDownload(json_data) {
         alert("Failed to download file.");
     }
 }
-
 
 function renderEmptyTable() {
     $('#sponsorTable').html('<tr><td colspan="5" class="text-center">No data available</td></tr>');
@@ -285,7 +281,7 @@ async function sortData(value){
 }
 
 function updateSelectionInfo() {
- 
+
     let count = 0
     selectedItems.forEach((item)=>{
         if(item.selected === true){
@@ -294,7 +290,7 @@ function updateSelectionInfo() {
     })
 
     $("#selectedCount").text(count)
-    $("#selectionInfo").toggleClass("d-none", count === 0);   
+    $("#selectionInfo").toggleClass("d-none", count === 0);
     console.log(count)
   }
 
