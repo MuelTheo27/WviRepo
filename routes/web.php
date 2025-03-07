@@ -29,7 +29,7 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.
 Route::prefix("/api")->group(function () {
     Route::post("/upload/xlsx", [FileController::class, "uploadXslx"])->name("upload.xlsx");
     Route::get("/results", [TableController::class, "getTableData"]);
-    Route::get("/download", [DownloadController::class, "handle"])->name("download.xlsx");
+    Route::post("/download", [DownloadController::class, "handle"])->name("download.xlsx");
     Route::get("/delete", [TableController::class, "deleteData"])
 ;});
 // });
