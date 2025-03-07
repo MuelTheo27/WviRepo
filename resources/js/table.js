@@ -122,13 +122,13 @@ window.populateChildrenTable = async function (){
                 selectedItems.set(i, {selected: false });
             }
             renderChildrenTable();
-            
+
 
         }
     })
 }
 
-const itemsPerPage = 1;
+const itemsPerPage = 10;
 let currentPage = 1;
 
 function renderChildrenTable() {
