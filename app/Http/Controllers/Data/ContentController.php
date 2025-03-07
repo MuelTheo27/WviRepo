@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Http\Controllers\Data;
+use App\Http\Controllers\Controller;
 use App\Models\Child;
 use App\Models\Content;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class ContentController extends Controller
         $content = Content::where("pdf_link", $pdfLink)->first();
 
         if ($content) {
-            return $content->id; // Return existing sponsor ID
+            return $content->content_id; // Return existing sponsor ID
         }
 
     // Insert new sponsor and return its ID

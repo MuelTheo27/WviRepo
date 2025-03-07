@@ -9,8 +9,8 @@ class Sponsor extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'sponsor_id';
-    protected $fillable = ['sponsor_name', 'sponsor_category_id'];
+    protected $primaryKey = 'id';
+    protected $fillable = ['name', 'sponsor_category_id'];
 
     public function category()
     {

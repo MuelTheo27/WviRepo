@@ -6,83 +6,78 @@ use App\Models\Child;
 use Illuminate\Http\Request;
 use App\Models\Sponsor;
 use App\Models\SponsorCategory;
+use Illuminate\Support\UriQueryString;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class TableController extends Controller
 {
-    public function getTableData()
-    {
-        // Fetch all sponsors with their category and children
-        $sponsors = Sponsor::with(['category', 'children'])->get();
-        return response()->json($sponsors);
-    }
 
-    public function getTablePage()
-    {
-        // Fetch all sponsors with their category and children
-        $sponsors = Sponsor::with(['category', 'children'])->get();
-        return view('table', compact('sponsors'));
-    }
 
-    public function searchSponsor(Request $request)
-    {
-        $query = $request->query('query'); // Get the search query from the URL parameter
-        dd($query);
-        // Search by sponsor_name, sponsor_id, or sponsor_category_name
-        $sponsors = Sponsor::where('sponsor_name', 'like', '%' . $query . '%')
-            ->orWhere('sponsor_id', 'like', '%' . $query . '%')
-            ->orWhereHas('category', function ($q) use ($query) {
-                $q->where('sponsor_category_name', 'like', '%' . $query . '%');
-            })
-            ->with(['category', 'children']) // Include category and children in the response
-            ->get();
+    public function getTableData(Request $request){
 
-        
-        return response()->json($sponsors);
-    }
+        $search_query = $request->query("search_query");
+        $category = $request->query("category");
+        $sort_option = $request->query("option");
 
-    public function sortSponsor(Request $request)
-    {
-        $sortBy = $request->query('sort_by', 'created_at'); // Default sort by newest (created_at)
-        $order = $request->query('order', 'desc'); // Default order is descending
-
-        // Validate sort_by to prevent SQL injection
-        $validSortColumns = ['sponsor_id', 'sponsor_name', 'created_at'];
-        if (!in_array($sortBy, $validSortColumns)) {
-            $sortBy = 'created_at';
-        }
-
-        // Sort sponsors and include category and children in the response
-        $sponsors = Sponsor::orderBy($sortBy, $order)
-            ->with(['category', 'children'])
-            ->get();
-
-        return response()->json($sponsors);
-    }
-
-    public function addSponsor(Request $request)
-    {
-        // Validate the request data
-        $validatedData = $request->validate([
-            'sponsor_name' => 'required|string|max:255',
-            'sponsor_category_id' => 'required|exists:sponsor_categories,sponsor_category_id',
+        $data = Child::select('children.id', 'children.child_code', 'children.sponsor_id')
+        ->with([
+            'sponsor:id,name,sponsor_category_id', 
+            'sponsor.category:id,sponsor_category_name',
+            'content:id,child_id,fiscal_year'
         ]);
 
-        // Create a new sponsor
-        $sponsor = Sponsor::create($validatedData);
+        if(isset($search_query)){
+            $data = $data->whereHas('sponsor', function ($q) use ($search_query) {
+                $q->where('name', 'LIKE', "%$search_query%");
+            });
+        }
 
-        // Return the newly created sponsor with a 201 status
-        return response()->json($sponsor, 201);
+        $categoryMapping = [
+            1=> "Mass Sponsor",
+            2=> "Middle Sponsor",
+            3=> "Major Sponsor"
+        ];
+
+        if(isset($category)){
+            $sponsorCategory = $categoryMapping[$category] ?? null;
+            
+            $data =  $data->whereHas('sponsor.category', function ($query) use ($sponsorCategory) {
+                $query->where('sponsor_category_name', $sponsorCategory); 
+            });
+        }
+
+        if(isset($sort_option)){
+            $data = $data->orderBy('created_at', $sort_option);
+        }
+
+        $data = $data->get()
+        ->map(function ($child) {
+            return [
+                'child_code' => $child->child_code,
+                'sponsor_name' => $child->sponsor->name,
+                'sponsor_category' => $child->sponsor->category->sponsor_category_name,
+                'fiscal_year' => $child->content->fiscal_year,
+            ];
+        });
+
+        return response()->json($data);    
     }
-
-    public function deleteSponsor($id)
+    
+    public function deleteData(Request $request)
     {
-        // Find the sponsor by ID or fail
-        $sponsor = Sponsor::findOrFail($id);
-
-        // Delete the sponsor
-        $sponsor->delete();
-
-        // Return a 204 No Content response
-        return response()->json(null, 204);
+        $child_code = $request->query("child_code");
+    
+        $deleted = Child::where("child_code", $child_code)->delete();
+    
+        if ($deleted) {
+            return response()->json(["status" => "success"], 200);
+        }
+    
+        return response()->json([
+            "status" => "failed",
+            "message" => "Record not found or already deleted"
+        ], 404);
     }
+    
+
 }

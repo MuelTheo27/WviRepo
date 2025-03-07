@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('content', function (Blueprint $table) {
-        $table->id('content_id');       
-        $table->string('pdf_link');
-        $table->timestamps();
+        Schema::table('children', function (Blueprint $table) {
+            $table->foreign('content_id')->references('id')->on('content')->onDelete('cascade');
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('contents');
+        Schema::table('children', function (Blueprint $table) {
+            $table->dropForeign(['content_id']);
+        });
     }
 };

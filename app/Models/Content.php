@@ -9,8 +9,9 @@ class Content extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'content_id';
-    protected $fillable = ['pdf_link', 'child_id'];
+    protected $table = "content";
+    protected $primaryKey = 'id';
+    protected $fillable = ['content_url', 'child_id', 'fiscal_year'];
 
     public function child()
     {  
