@@ -77,7 +77,7 @@
         <!-- Top Controls -->
         <div class="d-flex align-items-center gap-2 mb-3">
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSponsorModal">Add New Data</button>
-            
+
             <div class="d-flex gap-2" style="width:12rem;">
                 <select id="sortBySponsor" class="form-select">
                 <option hidden disabled selected>Filter by Category</option>
@@ -108,20 +108,21 @@
                 <div class="table-container">
       <table class="table table-bordered mt-3">
         <thead class="table-light">
-          <tr>
-            <th>Select</th>
-            <th style="display:flex; justify-content: space-between; align-items: center;">Child Code
-            <div style=" display: inline-flex; flex-direction: column; padding: 4px; border-radius: 4px; background-color: white;" id="sortButton">
-              <button style="background: none; border: none; font-size: 8px; cursor: pointer; padding: 0; line-height: 0.8;">▲</button>
-              <button style="background: none; border: none; font-size: 8px; cursor: pointer; padding: 0; line-height: 0.8;">▼</button>
-            </div>
-            </th>
-            <th>Sponsor ID</th>
-            <th>Sponsor Name</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+            <tr>
+              <th>Select</th>
+              <th style="display:flex; justify-content: space-between; align-items: center;">Child Code
+                <div style=" display: inline-flex; flex-direction: column; padding: 4px; border-radius: 4px; background-color: white;" id="sortButton">
+                  <button style="background: none; border: none; font-size: 8px; cursor: pointer; padding: 0; line-height: 0.8;">▲</button>
+                  <button style="background: none; border: none; font-size: 8px; cursor: pointer; padding: 0; line-height: 0.8;">▼</button>
+                </div>
+              </th>
+              <th>Sponsor ID</th>
+              <th>Sponsor Name</th>
+              <th>Year</th> <!-- New Year Column -->
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
         <tbody id="sponsorTable">
           <!-- Data populated via JS -->
         </tbody>
@@ -131,31 +132,58 @@
     </div>
 
     <!-- Bootstrap Modal for "Add New Data" with Drag & Drop -->
-    <div class="modal fade" id="addSponsorModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Upload Your Files</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="addSponsorModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Upload Your Files</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Year and Month Dropdowns -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="yearDropdown" class="form-label">Year</label>
+                        <select id="yearDropdown" class="form-select">
+                            <!-- Populate years dynamically using JavaScript -->
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="monthDropdown" class="form-label">Month</label>
+                        <select id="monthDropdown" class="form-select">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <p class="text-muted">Files should be <strong>.xlsx</strong></p>
 
-                    <div id="fileDropzone" class="dropzone"> 
-                        @csrf
-                        <div class="dz-message">
-                          <p>Drag and drop files here</p>
-                        </div></div>
-                    <ul id="fileList" class="file-list"></ul>
+                <p class="text-muted">Files should be <strong>.xlsx</strong></p>
 
+                <div id="fileDropzone" class="dropzone">
+                    @csrf
+                    <div class="dz-message">
+                        <p>Drag and drop files here</p>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" id="cancelUploadButton" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="uploadButton">Upload</button>
-                </div>
+                <ul id="fileList" class="file-list"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="cancelUploadButton" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="uploadButton">Upload</button>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Upload Success Modal -->
     <div class="modal fade" id="uploadSuccessModal" tabindex="-1" aria-hidden="true">
@@ -211,7 +239,7 @@
     @vite('resources/js/upload.js')
 
 </body>
-    
+
 
 
 </html>

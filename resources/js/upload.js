@@ -17,7 +17,7 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
     headers: {
         "X-CSRF-TOKEN": $('input[name="_token"]').val()
     },
-        
+
     init: function () {
         let dropzoneInstance = this;
         let fileList = document.getElementById("fileList");
@@ -29,11 +29,11 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
         let failCount = 0;
         let partialSuccessCount = 0;
         dropzoneMessage.style.display = "block";
-    
+
         let uploadedFiles = [];
-      
+
         this.on("addedfile", function (file) {
-            
+
             if (file.previewElement) {
                 file.previewElement.remove();
             }
@@ -41,14 +41,14 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
             let listItem = document.createElement("li");
 
             validateExcelContent(file).then((res) => {
-            
+
                 if(res.state === true){
                     listItem.innerHTML = `${file.name} <button class="remove-file">Remove</button>`;
                     listItem.querySelector(".remove-file").addEventListener("click", () => {
                         dropzoneInstance.removeFile(file);
                         listItem.remove();
                         uploadedFiles = uploadedFiles.filter(f => f !== file.name);
-                    });        
+                    });
                     listItem.classList.add("success-file")
                     $("#uploadButton").prop("disabled", false);
                 }else{
@@ -56,7 +56,7 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
                     listItem.classList.add("error-file");
                     dropzoneInstance.removeFile(file);
                 }
-                
+
             });
 
             fileList.appendChild(listItem);
@@ -67,12 +67,12 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
             uploadedFiles = [];
             dropzoneInstance.removeAllFiles();
             $("#uploadButton").prop("disabled", false);
-            
+
         });
-      
+
         document.getElementById("uploadButton").addEventListener("click", function () {
             dropzoneInstance.processQueue()
-          
+
             $("#uploadButton").prop("disabled", true);
 
         });
@@ -142,3 +142,28 @@ function validateExcelContent(file) {
         reader.readAsArrayBuffer(file);
     });
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Populate year dropdown
+    const yearDropdown = document.getElementById("yearDropdown");
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - 10; // Adjust the range as needed
+
+    for (let year = currentYear; year >= startYear; year--) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        yearDropdown.appendChild(option);
+    }
+});
+document.getElementById("uploadButton").addEventListener("click", function () {
+    const selectedYear = document.getElementById("yearDropdown").value;
+    const selectedMonth = document.getElementById("monthDropdown").value;
+
+    console.log("Selected Year:", selectedYear);
+    console.log("Selected Month:", selectedMonth);
+
+    // Proceed with your upload logic
+    dropzoneInstance.processQueue();
+    $("#uploadButton").prop("disabled", true);
+});
