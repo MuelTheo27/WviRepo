@@ -108,16 +108,20 @@ public function store(array $record, string $fiscal_year){
                 ]);
             }
         
-            $child = Child::where('child_idn', $record[0])->lockForUpdate()->first();
+            $child = Child::withTrashed()->where('child_idn', $record[0])->lockForUpdate()->first();
         
             if (!$child) {
                 $child = Child::create([
                     'child_idn' => $record[0],
                     'sponsor_id' => $sponsor->id
                 ]);
+            } else if ($child->trashed()) {
+                $child->restore();
+                $child->sponsor_id = $sponsor->id;
+                $child->save();
             }
 
-            $content = Content::where('fiscal_year', $fiscal_year)
+            $content = Content::withTrashed()->where('fiscal_year', $fiscal_year)
                   ->where('child_idn', $child->child_idn)  
                   ->lockForUpdate()
                   ->first();
@@ -135,6 +139,10 @@ public function store(array $record, string $fiscal_year){
                     'fiscal_year' => $fiscal_year,
                     'content_url' => $contentUrl
                 ]);
+            } else if ($content->trashed()) {
+                $content->restore();
+                $content->content_url = $this->aprService->getAnnualPerformanceReportUrl($child->child_idn, $fiscal_year) ?? $content->content_url;
+                $content->save();
             }
             
             return true; 
@@ -143,7 +151,7 @@ public function store(array $record, string $fiscal_year){
        
         if ($th instanceof \Illuminate\Database\QueryException || 
             $th instanceof \PDOException) {
-            return new Error('Error on database');
+            return new Error($th->getMessage());
         } else {
             return new Error($th->getMessage());
         }

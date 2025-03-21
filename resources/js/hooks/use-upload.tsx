@@ -77,7 +77,7 @@ export function useUpload(fiscalYear: number, setIsProcessing: (state: boolean) 
                       ...data
                     }
                   }));
-                  
+                  console.log(responseArray)
                   setStatus(prev => [...prev, ...responseArray]);
                   
                   refetch();
