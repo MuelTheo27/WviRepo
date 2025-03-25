@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    @vite('resources/css/app.css') <!-- Pastikan ini sudah ada di project-mu -->
 </head>
 <body class="font-[sans-serif] bg-gray-50">
     <div class="min-h-screen flex flex-col items-center justify-center px-4">

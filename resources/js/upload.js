@@ -6,7 +6,7 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
 
     Dropzone.autoDiscover = false
     var myDropzone = new Dropzone("div#fileDropzone", {
-    url:"/api/upload/xlsx",
+    url:"api/upload/xlsx",
     paramName: "file",
     maxFiles: null,  // Allows unlimited files
     acceptedFiles: ".xlsx",
@@ -14,6 +14,7 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
     createImageThumbnails: false,  // Disables image thumbnails
     addRemoveLinks: false,
     autoProcessQueue: false,
+    uploadMultiple: true,
     headers: {
         "X-CSRF-TOKEN": $('input[name="_token"]').val()
     },
@@ -41,14 +42,14 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
             let listItem = document.createElement("li");
 
             validateExcelContent(file).then((res) => {
-
+            
                 if(res.state === true){
                     listItem.innerHTML = `${file.name} <button class="remove-file">Remove</button>`;
                     listItem.querySelector(".remove-file").addEventListener("click", () => {
                         dropzoneInstance.removeFile(file);
                         listItem.remove();
                         uploadedFiles = uploadedFiles.filter(f => f !== file.name);
-                    });
+                    });        
                     listItem.classList.add("success-file")
                     $("#uploadButton").prop("disabled", false);
                 }else{
@@ -56,7 +57,7 @@ let successModal = new bootstrap.Modal(document.getElementById("uploadSuccessMod
                     listItem.classList.add("error-file");
                     dropzoneInstance.removeFile(file);
                 }
-
+                
             });
 
             fileList.appendChild(listItem);
