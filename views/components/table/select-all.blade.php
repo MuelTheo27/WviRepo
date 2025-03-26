@@ -22,12 +22,7 @@
                 <h5 class="modal-title" id="bulkActionModalLabel">Confirm Action</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <!-- <div class="modal-body">
-                
-                <div class="progress mt-3" style="display: none;">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                </div>
-            </div> -->
+            
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="confirmBulkAction">Confirm</button>
@@ -44,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectionBar = document.getElementById('selectionBar');
     const selectedCountSpan = document.getElementById('selectedCount');
     const bulkActionModal = document.getElementById('bulkActionModal');
-    const bulkActionCount = document.getElementById('');
+    const bulkActionCount = document.getElementById('bulkActionCount');
     const bulkActionMessage = document.getElementById('bulkActionMessage');
     const bulkDownloadOptions = document.getElementById('bulkDownloadOptions');
     const confirmBulkActionBtn = document.getElementById('confirmBulkAction');
@@ -95,11 +90,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Bulk action buttons
     document.getElementById('downloadSelected')?.addEventListener('click', function() {
-  
+        showBulkActionModal('download');
+        console.log("OEJIDE")
     });
     
     document.getElementById('deleteSelected')?.addEventListener('click', function() {
-        console.log("yes")
         showBulkActionModal('delete');
     });
     
@@ -111,7 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
         currentBulkAction = action;
         
         // Get the count of selected items
-        const count = Object.keys(rowSelection).length;
+        // const count = Object.keys(rowSelection).length;
+        // bulkActionCount.textContent = count;
         
         // Show/hide download options
         if (action === 'download') {

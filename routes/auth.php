@@ -59,15 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 
-        Route::prefix("/api")->group(function () {
-            Route::post("/upload/xlsx", [FileController::class, "upload"])->name("upload.xlsx");
-            Route::get("/results", [TableController::class, "getTableData"]);
-            Route::post("/download", [DownloadController::class, "handle"])->name("download.xlsx");
-            Route::post("/delete", [DeleteController::class, "handleDeletion"]);
-            Route::get("/upload/progress", [ProgressController::class, "getUploadProgress"]);
-            Route::get('/download/clear-progress', [ProgressController::class, "clearDownloadProgress"]);
-            Route::get("/download/progress", [ProgressController::class, "getDownloadProgress"]);
-        ;});
+    
        
        
         

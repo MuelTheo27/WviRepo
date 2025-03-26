@@ -24,12 +24,12 @@ class DownloadController extends Controller
         $fiscalYear = $request->json('fiscal_year');
         $downloadId = $request->json("download_id");
 
-    
+
         if (count($childIdns) === 1) {
             ProgressController::startDownloadBroadcastProgress($downloadId, 1);
 
             $contentUrl = Child::where("child_idn", $childIdns[0])->first()->content()->where("fiscal_year", $fiscalYear)->first()->content_url;
-            
+
             $file = Http::get($contentUrl);
             ProgressController::updateDownloadBroadcastProgress($downloadId);
             return Response::make($file->body(), 200, [
@@ -64,10 +64,29 @@ class DownloadController extends Controller
                 }
             }
 
-            $zipFileName = 'Annual_Progress_Reports_' . '.zip';
+            $zipFileName = 'Annual_Progress_Reports_' . $categoryName . '.zip';
             $zipFilePath = $this->zipService->createZipFromSponsors($sponsorData, $zipFileName, $categoryName, $downloadId);
 
-            return response()->download($zipFilePath)->deleteFileAfterSend(true);
+            if (!file_exists($zipFilePath)) {
+                return response()->json(['error' => 'File not found.'], 404);
+            }
+
+            $fileSize = filesize($zipFilePath);
+
+            $response = response()->streamDownload(function () use ($zipFilePath) {
+                readfile($zipFilePath);
+            }, basename($zipFilePath), [
+                'Content-Type' => 'application/zip',
+                'Content-Length' => $fileSize,
+            ]);
+
+            register_shutdown_function(function () use ($zipFilePath) {
+                if (file_exists($zipFilePath)) {
+                    unlink($zipFilePath);
+                }
+            });
+
+            return $response;
         }
 
     }

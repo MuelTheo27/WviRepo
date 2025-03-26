@@ -50,7 +50,7 @@
                     </div>
                 </div>
 
-                <!-- Selection bar - hidden by default -->
+            
 
                 @include('components.scripts.delete-action')
                 @include('components.table.select-all')
@@ -68,6 +68,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th width="40">
+                                        <!-- Select All column - checkbox moved to separate row above -->
                                     </th>
                                     <th>Child Code</th>
                                     <th>Sponsor ID</th>
@@ -95,9 +96,6 @@
         </div>
     </div>
 
-
-    @include('components.table.upload-progress-modal')
-    @include('components.table.download-progress-modal')
     <!-- Add New Data Modal -->
     <div class="modal fade" id="addDataModal" tabindex="-1" aria-labelledby="addDataModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -108,41 +106,41 @@
                 </div>
 
                 <?php 
-                                $years = collect(range(2025, 2019))->map(function ($year) {
-        return (object) [
-            'value' => (string) $year,
-        ];
-    });
+                    $years = collect(range(2025, 2019))->map(function ($year) {
+                    return (object) [
+                        'value' => (string)$year,
+                    ];
+                });
 
-    $months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                            ?>
+                    $months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                ?>
 
                 <div class="modal-body">
                     <form id="addSponsorForm">
 
                         <div class="row">
-
-                            <div class="col-md-6">
-                                <label class="form-label">Year</label>
-                                <select class="form-select" name="year" id="yearSelect">
+                           
+                                <div class="col-md-6">
+                                    <label class="form-label">Year</label>
+                                    <select class="form-select" name="year" id="yearSelect">
                                     @foreach($years as $option)
-                                        <option value="{{ $option->value }}" @selected(old('year') == $option->value)>
-                                            {{ $option->value }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Month</label>
-                                <select class="form-select" name="month" id="monthSelect">
-                                    @foreach($months as $option)
-                                        <option value="{{ $option }}" @selected(old('month') == $option)>
-                                            {{ $option }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
+                                            <option value="{{ $option->value }}" @selected(old('year') == $option->value)>
+                                                {{ $option->value }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Month</label>
+                                    <select class="form-select" name="month" id="monthSelect">
+                                        @foreach($months as $option)
+                                            <option value="{{ $option }}" @selected(old('month') == $option)>
+                                                {{ $option }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                       
                         </div>
 
                         <div id="fileDropzone" class="dropzone">
@@ -158,18 +156,15 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="saveNewSponsor">Save</button>
                 </div>
-
             </div>
         </div>
-
-
     </div>
 @endsection
 
 @section('scripts')
-
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.0/min/dropzone.min.js"></script>
+
     <script>
         function calculateFiscalYear(month, year) {
             if (month >= 9) {
@@ -180,17 +175,17 @@
 
         Dropzone.autoDiscover = false
         var myDropzone = new Dropzone("div#fileDropzone", {
-
+            
             url: "api/upload/xlsx",
             paramName: 'file',
-            maxFiles: 5,
-            acceptedFiles: '.xlsx',
-            createImageThumbnails: false,
-            previewsContainer: false,
-            addRemoveLinks: false,
-            autoProcessQueue: false,
-            uploadMultiple: true,
-            parallelUploads: 5,
+                maxFiles: 5,
+                acceptedFiles: '.xlsx',
+                createImageThumbnails: false,
+                previewsContainer: false,
+                addRemoveLinks: false,
+                autoProcessQueue: false,
+                uploadMultiple: true,
+                parallelUploads : 5,
             headers: {
                 "X-CSRF-TOKEN": $('input[name="_token"]').val()
             },
@@ -217,7 +212,7 @@
                     console.log(year);
                     formData.append("fiscalYear", year);
                     formData.append('fileId', JSON.stringify(files.map(file => file.upload?.uuid)));
-                });
+                    });
 
                 this.on("addedfile", function (file) {
                     let listItem = document.createElement("li");
@@ -229,30 +224,39 @@
                     });
                     listItem.classList.add("success-file")
                     fileList.appendChild(listItem);
-                    document.getElementById("saveNewSponsor").disabled = false;
 
                 });
 
-                this.on("success", function (file, response) {
-                    console.log("success uploaded..")
-                    fetchData();
+                $('#addSponsorModal').on('hidden.bs.modal', function () {
+                    $("#fileList").empty();
+                    uploadedFiles = [];
+                    dropzoneInstance.removeAllFiles();
+                    $("#uploadButton").prop("disabled", false);
+
                 });
 
                 document.getElementById("saveNewSponsor").addEventListener("click", function () {
-                    window.addDataModal.hide()
-                    const uploadProgressModal = new bootstrap.Modal(document.getElementById('uploadProgressModal'));
-
-                    uploadProgressModal.show();
-                    dropzoneInstance.processQueue();
-
+                dropzoneInstance.processQueue()
+                    // $("#saveNe").prop("disabled", true);
 
                 });
 
             },
-
+          
             success: function (file, response) {
+                let uploadModal = bootstrap.Modal.getInstance(document.getElementById("addSponsorModal"));
+                uploadModal.hide();
+                this.removeFile(file)
+                document.getElementById("uploadSummary").innerHTML = `
+                                    <p>Total Uploaded: ${totalFiles}</p>
+                                    <p class="text-success">Successful Uploads: ${successCount}</p>
+                                    <p class="text-warning">Partial Uploads: ${partialSuccessCount}</p>
+                                    <p class="text-danger">Failed Uploads: ${failCount}</p>
+                                `;
 
-                window.fetchData();
+                successModal.show();
+                $("#uploadButton").prop("disabled", false);
+                window.populateChildrenTable()
             }
         })
 
@@ -279,17 +283,8 @@
 
             // Initialize Bootstrap modal
             if (document.getElementById('addDataModal')) {
-                window.addDataModal = new bootstrap.Modal(document.getElementById('addDataModal'));
-                document.getElementById('addDataModal').addEventListener('hidden.bs.modal', function () {
-                    if (window.myDropzone) {
-                        window.myDropzone.removeAllFiles();
-                    }
-                    document.getElementById("fileList").innerHTML = '';
-                });
-
+                addDataModal = new bootstrap.Modal(document.getElementById('addDataModal'));
             }
-
-
 
             // Add New Data button event
             document.getElementById('addNewDataBtn')?.addEventListener('click', function () {
@@ -297,18 +292,16 @@
                 document.getElementById('addSponsorForm')?.reset();
 
                 // Show modal
-                if (window.addDataModal) {
-                    window.addDataModal.show();
-                    window.myDropzone.removeAllFiles();
-                    document.getElementById("saveNewSponsor").disabled = true;
+                if (addDataModal) {
+                    addDataModal.show();
                 }
             });
 
+           
 
-
-            window.fetchData = async function fetchData() {
+            async function fetchData() {
                 try {
-
+                    
                     loadingIndicator.style.display = 'block';
                     tableResponsive.style.display = 'none';
                     errorMessage.style.display = 'none';
@@ -317,7 +310,7 @@
 
                     const response = await axios.get('/api/results');
                     allData = response.data;
-
+                    
                     console.log("refertching")
                     applyFilters();
 
@@ -391,10 +384,10 @@
                 if (filteredData.length === 0) {
                     // No data to display
                     sponsorTable.innerHTML = `
-                                                                <tr id="noDataRow">
-                                                                    <td colspan="7" class="text-center py-4">No matching records found</td>
-                                                                </tr>
-                                                            `;
+                                                    <tr id="noDataRow">
+                                                        <td colspan="7" class="text-center py-4">No matching records found</td>
+                                                    </tr>
+                                                `;
                     return;
                 }
 
@@ -486,18 +479,18 @@
                 paginationContainer.style.display = 'block';
 
                 let paginationHTML = `
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            Showing ${filteredData.length > 0 ? currentPage * pageSize + 1 : 0} to ${Math.min((currentPage + 1) * pageSize, filteredData.length)} of ${filteredData.length} entries
-                                                        </div>
-                                                        <nav aria-label="Page navigation">
-                                                            <ul class="pagination mb-0">
-                                                                <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
-                                                                    <button class="page-link" data-page="prev" aria-label="Previous">
-                                                                        <span aria-hidden="true">&laquo;</span>
-                                                                    </button>
-                                                                </li>
-                                                `;
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                Showing ${filteredData.length > 0 ? currentPage * pageSize + 1 : 0} to ${Math.min((currentPage + 1) * pageSize, filteredData.length)} of ${filteredData.length} entries
+                                            </div>
+                                            <nav aria-label="Page navigation">
+                                                <ul class="pagination mb-0">
+                                                    <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+                                                        <button class="page-link" data-page="prev" aria-label="Previous">
+                                                            <span aria-hidden="true">&laquo;</span>
+                                                        </button>
+                                                    </li>
+                                    `;
 
 
                 const maxPages = 5;
@@ -506,22 +499,22 @@
 
                 for (let i = startPage; i < endPage; i++) {
                     paginationHTML += `
-                                                        <li class="page-item ${i === currentPage ? 'active' : ''}">
-                                                            <button class="page-link" data-page="${i}">${i + 1}</button>
-                                                        </li>
-                                                    `;
+                                            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                                                <button class="page-link" data-page="${i}">${i + 1}</button>
+                                            </li>
+                                        `;
                 }
 
                 paginationHTML += `
-                                                                <li class="page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}">
-                                                                    <button class="page-link" data-page="next" aria-label="Next">
-                                                                        <span aria-hidden="true">&raquo;</span>
-                                                                    </button>
-                                                                </li>
-                                                            </ul>
-                                                        </nav>
-                                                    </div>
-                                                `;
+                                                    <li class="page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}">
+                                                        <button class="page-link" data-page="next" aria-label="Next">
+                                                            <span aria-hidden="true">&raquo;</span>
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    `;
 
                 paginationContainer.innerHTML = paginationHTML;
 
@@ -577,8 +570,7 @@
                         const sponsor = filteredData[index - currentPage * pageSize];
 
                         handleDownload({
-                            child_idn: sponsor.child_idn,
-                            fiscal_year: sponsor.fiscal_year
+                            child_code: sponsor.child_idn
                         });
                     });
                 });
@@ -591,10 +583,10 @@
                         const sponsor = filteredData[index - currentPage * pageSize];
 
                         if (confirm(`Are you sure you want to delete sponsor ${sponsor.child_idn}?`)) {
-                            handleDelete([{
+                            handleDelete({
                                 child_idn: sponsor.child_idn,
                                 fiscal_year: sponsor.fiscal_year
-                            }]);
+                            });
                         }
                     });
                 });
@@ -615,93 +607,10 @@
 
             async function handleDownload(data) {
                 try {
-                    const cancelTokenSource = axios.CancelToken.source();
-                    let progressInterval;
-
-                    data = {
-                        ...data,
-                        download_id: 1
-                    }
-
-                    const downloadProgressModal = new bootstrap.Modal(document.getElementById('downloadProgressModal'));
-                    downloadProgressModal.show();
-
-                    document.getElementById('downloadProgressState').style.display = 'block';
-                    document.getElementById('downloadSuccessState').style.display = 'none';
-                    document.getElementById('downloadErrorState').style.display = 'none';
-                    document.getElementById('downloadDoneBtn').style.display = 'none';
-                    document.getElementById('downloadTryAgainBtn').style.display = 'none';
-                    document.getElementById('cancelDownloadBtn').style.display = 'block';
-                    document.getElementById('closeDownloadModal').style.display = 'none';
-
-                    const progressBar = document.getElementById('downloadProgressBar');
-                    const statusText = document.getElementById('downloadStatusText');
-
-                    progressInterval = setInterval(async () => {
-                        try {
-                        
-                            const progressResponse = await axios.get(`/api/download/progress?download_id=${data.download_id}`);
-                            const { progress, total } = progressResponse.data;
-                       
-                            // Calculate percentage
-                            const percentComplete = total > 0 ? Math.floor((progress / total) * 100) : 0;
-
-                            console.log("completed = " , percentComplete)
-
-                            progressBar.style.width = `${percentComplete}%`;
-                            progressBar.setAttribute('aria-valuenow', percentComplete);
-                            progressBar.textContent = `${percentComplete}%`;
-
-                           
-                            statusText.textContent = status || `Processing ${progress} of ${total} items...`;
-
-                            if (progress >= total && total > 0) {
-                                clearInterval(progressInterval);
-                                progressBar.style.width = '100%';
-                                progressBar.setAttribute('aria-valuenow', 100);
-                                progressBar.textContent = '100%';
-                                statusText.textContent = 'Download complete!';
-                            }
-                        } catch (error) {
-                            console.error('Error fetching progress:', error);
-                        }
-                    }, 1000); // Check progress every second
-
-                    document.getElementById('cancelDownloadBtn').addEventListener('click', function onCancel() {
-                        cancelHandler();
+                    const response = await axios.post('/api/download', data, {
+                        responseType: 'blob'
                     });
 
-                    const cancelHandler = function onCancel() {
-
-                        cancelTokenSource.cancel('Download cancelled by user');
-
-                        clearInterval(progressInterval);
-
-                        downloadProgressModal.hide();
-
-                        document.getElementById('cancelDownloadBtn').removeEventListener('click', cancelHandler);
-                    };
-
-
-
-                    const response = await axios.post('/api/download', data , {
-                        responseType: 'blob',
-                        CancelToken: cancelTokenSource.token,
-                        onDownloadProgress: function (progressEvent) {
-                            
-                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                            console.log(progressEvent)
-                            // document.getElementById('downloadProgressBar').style.width = percentCompleted + '%';
-                            // document.getElementById('downloadProgressBar').textContent = percentCompleted + '%';
-                        }
-                    });
-
-                    setTimeout(async () => {
-                        clearInterval(progressInterval);
-
-                    await axios.get("/api/download/clear-progress?download_id=" + data.download_id);
-                    }, 2000)
-                    
                     const url = window.URL.createObjectURL(new Blob([response.data]));
                     const link = document.createElement('a');
                     link.href = url;
@@ -731,19 +640,19 @@
 
             async function handleDelete(params) {
                 try {
-                    params = { deleteList: params }
-
+                    params = {deleteList : [params]}
+                   
                     const response = await axios({
                         url: 'api/delete',
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': $('input[name="_token"]').val()
                         },
                         data: params
                     });
                     if (response.status === 200) {
-
+                    
                         fetchData();
 
                         alert('Successfully deleted sponsor');
@@ -776,39 +685,20 @@
                 updateSelectionInfo();
             });
 
-            const yearSelect = document.getElementById('yearFilter');
-            const categorySelect = document.getElementById('categoryFilter');
-
-            document.getElementById('downloadSelected').hidden = true;
-
-            categorySelect?.addEventListener('change', function (e) {
-                if (yearSelect.value && (e.target.value === "Hardcopy" || e.target.value === "Major Sponsor")) {
-                    document.getElementById('downloadSelected').hidden = false;
-                }
-                else {
-                    document.getElementById('downloadSelected').hidden = true;
-                }
-            })
             // Add event listeners for bulk actions
-
-
             document.getElementById('downloadSelected')?.addEventListener('click', function () {
-                if (yearSelect.value && (categorySelect.value === "Hardcopy" || categorySelect.value === "Major Sponsor")) {
-                    const selectedIndices = Object.keys(rowSelection);
-                    if (selectedIndices.length === 0) {
-                        alert('Please select at least one item to download');
-                        return;
-                    }
-
-                    const selectedIds = selectedIndices.map(index => filteredData[index].child_idn);
-                    console.log(yearSelect.value, categorySelect.value)
-                    handleDownload({
-                        child_idn: selectedIds,
-                        fiscal_year: yearSelect.value,
-                    });
+                const selectedIndices = Object.keys(rowSelection);
+                if (selectedIndices.length === 0) {
+                    alert('Please select at least one item to download');
+                    return;
                 }
-            });
 
+                const selectedIds = selectedIndices.map(index => filteredData[index].child_idn);
+
+                handleDownload({
+                    child_code: selectedIds
+                });
+            });
 
             document.getElementById('deleteSelected')?.addEventListener('click', function () {
                 const selectedIndices = Object.keys(rowSelection);
@@ -817,9 +707,9 @@
                     return;
                 }
 
-                const selectedIds = selectedIndices.map((index) => { return { child_idn: filteredData[index].child_idn, fiscal_year: filteredData[index].fiscal_year } });
+                const selectedIds = selectedIndices.map((index) => { return { child_idn : filteredData[index].child_idn, fiscal_year : filteredData[index].fiscal_year } });
 
-                handleDelete(selectedIds)
+                console.log(selectedIds)
                 // if (confirm(`Are you sure you want to delete ${selectedIds.length} selected items?`)) {
                 //     // Call delete function for each selected ID
                 //     Promise.all(selectedIds.map(id => handleDelete(id)))
