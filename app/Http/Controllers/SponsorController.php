@@ -24,6 +24,7 @@ $data = Child::select('children.id', 'children.child_code', 'children.sponsor_id
     ->map(function ($child) {
         return [
             'child_code' => $child->child_code,
+            'sponsor_id' => $child->sponsor->id,  // Getting sponsor_id
             'sponsor_name' => $child->sponsor->name,
             'sponsor_category' => $child->sponsor->category->sponsor_category_name,
             'fiscal_year' => $child->content->fiscal_year,

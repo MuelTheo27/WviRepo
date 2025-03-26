@@ -1,3 +1,4 @@
+<!-- resources/views/upload.blade.php -->
 @extends('layouts.app')
 
 @section('content')
@@ -36,9 +37,8 @@
                     </select>
                 </div>
 
-                <!-- Dropzone for file uploads -->
-                <div class="dropzone" id="fileDropzone" style="border: 2px dashed #ccc; padding: 20px; text-align: center;">
-                    <p>Drag and drop Excel files here (xlsx only)</p>
+                <div class="mb-4">
+                    <input type="file" id="fileInput" multiple class="form-input mt-1 block w-full" />
                 </div>
 
                 <div id="uploadProgressContainer" class="space-y-4 hidden">
@@ -59,53 +59,28 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/dropzone@5.7.0/dist/dropzone.js"></script>
-
     <script>
-        // Initialize Dropzone
-        Dropzone.autoDiscover = false;
-        const fileDropzone = new Dropzone("#fileDropzone", {
-            url: "/api/upload/xlsx", // The server endpoint to handle file upload
-            paramName: "file", // The name of the file parameter sent to the server
-            maxFilesize: 10, // Maximum file size in MB
-            acceptedFiles: ".xlsx", // Accept only .xlsx files
-            dictDefaultMessage: "Drag and drop Excel files here (xlsx only)",
-            addRemoveLinks: true,
-            init: function() {
-                this.on("sending", function(file, xhr, formData) {
-                    // You can add additional data to the formData if needed
-                    const fiscalYear = document.getElementById('fiscalYear').value;
-                    const month = document.getElementById('month').value;
-                    formData.append('fiscal_year', fiscalYear);
-                    formData.append('month', month);
-                });
+        document.getElementById('uploadBtn').addEventListener('click', function () {
+            const fileInput = document.getElementById('fileInput');
+            const progressBar = document.getElementById('progress');
+            const progressText = document.getElementById('progressText');
+            const uploadProgressContainer = document.getElementById('uploadProgressContainer');
 
-                this.on("uploadprogress", function(file, progress) {
-                    const progressBar = document.getElementById('progress');
-                    const progressText = document.getElementById('progressText');
-                    const uploadProgressContainer = document.getElementById('uploadProgressContainer');
-
-                    uploadProgressContainer.classList.remove('hidden');
-                    progressBar.style.width = progress + '%';
-                    progressText.textContent = Math.round(progress) + '%';
-                });
-
-                this.on("success", function(file, response) {
-                    // Handle success here
-                    console.log(response);
-                });
-
-                this.on("error", function(file, errorMessage) {
-                    // Handle error here
-                    console.error(errorMessage);
-                });
-
-                this.on("complete", function(file) {
-                    // Hide progress bar after completion
-                    setTimeout(() => {
-                        document.getElementById('uploadProgressContainer').classList.add('hidden');
-                    }, 1000);
-                });
+            if (fileInput.files.length > 0) {
+                // Show progress bar
+                uploadProgressContainer.classList.remove('hidden');
+                
+                // Simulate file upload progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    if (progress < 100) {
+                        progress += 10;
+                        progressBar.style.width = progress + '%';
+                        progressText.textContent = progress + '%';
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 500); // Simulate progress update every 0.5 seconds
             }
         });
 

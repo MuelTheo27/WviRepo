@@ -119,39 +119,52 @@
                     <h5 class="modal-title" id="addDataModalLabel">Add New Sponsor</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
+                <?php 
+                    $years = collect(range(2025, 2019))->map(function ($year) {
+                    return (object) [
+                        'value' => (string)$year,
+                    ];
+                });
+
+                    $months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                ?>
+
                 <div class="modal-body">
                     <form id="addSponsorForm">
-                        <div class="mb-3">
-                            <label for="childCode" class="form-label">Child Code</label>
-                            <input type="text" class="form-control" id="childCode" required>
+
+                        <div class="row">
+                           
+                                <div class="col-md-6">
+                                    <label class="form-label">Year</label>
+                                    <select class="form-select" name="year" onchange="this.form.submit()">
+                                    @foreach($years as $option)
+                                            <option value="{{ $option->value }}" @selected(old('year') == $option->value)>
+                                                {{ $option->value }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Month</label>
+                                    <select class="form-select" name="month" onchange="this.form.submit()">
+                                        @foreach($months as $option)
+                                            <option value="{{ $option }}" @selected(old('month') == $option)>
+                                                {{ $option }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                       
                         </div>
-                        <div class="mb-3">
-                            <label for="sponsorId" class="form-label">Sponsor ID</label>
-                            <input type="text" class="form-control" id="sponsorId" required>
+
+                        <div id="fileDropzone" class="dropzone">
+                            @csrf
+                            <div class="dz-message">
+                                <p>Drag and drop files here</p>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="sponsorName" class="form-label">Sponsor Name</label>
-                            <input type="text" class="form-control" id="sponsorName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="sponsorCategory" class="form-label">Sponsor Category</label>
-                            <select class="form-select" id="sponsorCategory" required>
-                                <option value="">Select Category</option>
-                                <option value="Mass Sponsor">Mass Sponsor</option>
-                                <option value="Middle Sponsor">Middle Sponsor</option>
-                                <option value="Major Sponsor">Major Sponsor</option>
-                                <option value="Hardcopy">Hardcopy</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="fiscalYear" class="form-label">Fiscal Year</label>
-                            <select class="form-select" id="fiscalYear" required>
-                                <option value="">Select Year</option>
-                                @for($year = 2025; $year >= 2019; $year--)
-                                    <option value="{{ $year }}">{{ $year }}</option>
-                                @endfor
-                            </select>
-                        </div>
+                        <ul id="fileList" class="file-list"></ul>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -165,7 +178,104 @@
 
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.0/min/dropzone.min.js"></script>
 
+    <script>
+        function calculateFiscalYear(month, year) {
+            if (month >= 9) {
+                return year + 1;
+            }
+            return year;
+        }
+
+        Dropzone.autoDiscover = false
+        var myDropzone = new Dropzone("div#fileDropzone", {
+            url: "api/upload/xlsx",
+            paramName: "file",
+            maxFiles: 5,
+            acceptedFiles: ".xlsx",
+            previewsContainer: null,
+            createImageThumbnails: false,
+            addRemoveLinks: false,
+            autoProcessQueue: false,
+            uploadMultiple: true,
+            headers: {
+                "X-CSRF-TOKEN": $('input[name="_token"]').val()
+            },
+
+            init: function () {
+                let dropzoneInstance = this;
+                let fileList = document.getElementById("fileList");
+                let dropzoneMessage = document.querySelector(".dz-message");
+                let fileSuccessList = document.getElementById("fileSuccessList");
+                let moreFilesText = document.getElementById("moreFilesText");
+                let totalFiles = 0;
+                let successCount = 0;
+                let failCount = 0;
+                let partialSuccessCount = 0;
+                dropzoneMessage.style.display = "block";
+
+                let uploadedFiles = [];
+
+                this.on("addedfile", function (file) {
+
+                    if (file.previewElement) {
+                        file.previewElement.remove();
+                    }
+
+                    let listItem = document.createElement("li");
+                    listItem.innerHTML = `${file.name} <button class="remove-file">Remove</button>`;
+                    listItem.querySelector(".remove-file").addEventListener("click", () => {
+                        dropzoneInstance.removeFile(file);
+                        listItem.remove();
+                        uploadedFiles = uploadedFiles.filter(f => f !== file.name);
+                    });
+                    listItem.classList.add("success-file")
+                    fileList.appendChild(listItem);
+
+                });
+
+                $('#addSponsorModal').on('hidden.bs.modal', function () {
+                    $("#fileList").empty();
+                    uploadedFiles = [];
+                    dropzoneInstance.removeAllFiles();
+                    $("#uploadButton").prop("disabled", false);
+
+                });
+
+                document.getElementById("saveNewSponsor").addEventListener("click", function () {
+                  
+
+                    dropzoneInstance.processQueue()
+                    // $("#saveNe").prop("disabled", true);
+
+                });
+
+            },
+            sendingMultiple: function (files, xhr, formData) {
+                const year = calculateFiscalYear(parseInt(document.getElementById("monthSelect").value), parseInt(document.getElementById("yearSelect").value));
+                formData.append("fiscalYear", year);
+                formData.append('fileId', JSON.stringify(files.map(file => file.upload?.uuid)));
+
+            },
+            success: function (file, response) {
+                let uploadModal = bootstrap.Modal.getInstance(document.getElementById("addSponsorModal"));
+                uploadModal.hide();
+                this.removeFile(file)
+                document.getElementById("uploadSummary").innerHTML = `
+                                    <p>Total Uploaded: ${totalFiles}</p>
+                                    <p class="text-success">Successful Uploads: ${successCount}</p>
+                                    <p class="text-warning">Partial Uploads: ${partialSuccessCount}</p>
+                                    <p class="text-danger">Failed Uploads: ${failCount}</p>
+                                `;
+
+                successModal.show();
+                $("#uploadButton").prop("disabled", false);
+                window.populateChildrenTable()
+            }
+        })
+
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Global state
@@ -202,53 +312,7 @@
                 }
             });
 
-            // Save new sponsor event
-            document.getElementById('saveNewSponsor')?.addEventListener('click', async function () {
-                // Get form values
-                const childCode = document.getElementById('childCode')?.value;
-                const sponsorId = document.getElementById('sponsorId')?.value;
-                const sponsorName = document.getElementById('sponsorName')?.value;
-                const sponsorCategory = document.getElementById('sponsorCategory')?.value;
-                const fiscalYear = document.getElementById('fiscalYear')?.value;
-
-                // Validate form
-                if (!childCode || !sponsorId || !sponsorName || !sponsorCategory || !fiscalYear) {
-                    alert('Please fill all required fields');
-                    return;
-                }
-
-                // Create new sponsor object
-                const newSponsor = {
-                    child_idn: childCode,
-                    sponsor_id: sponsorId,
-                    sponsor_name: sponsorName,
-                    sponsor_category: sponsorCategory,
-                    fiscal_year: fiscalYear
-                };
-
-                try {
-                    // Send to API
-                    const response = await axios.post('/api/sponsors', newSponsor);
-
-                    if (response.data.success) {
-                        // Add to local data
-                        allData.unshift(response.data.sponsor || newSponsor);
-
-                        // Hide modal
-                        if (addDataModal) {
-                            addDataModal.hide();
-                        }
-
-
-                        applyFilters();
-
-                        alert('Sponsor added successfully');
-                    }
-                } catch (error) {
-                    console.error('Error adding sponsor:', error);
-                    alert('Failed to add sponsor: ' + (error.response?.data?.message || 'Unknown error'));
-                }
-            });
+           
 
             async function fetchData() {
                 try {
@@ -333,10 +397,10 @@
                 if (filteredData.length === 0) {
                     // No data to display
                     sponsorTable.innerHTML = `
-                                <tr id="noDataRow">
-                                    <td colspan="7" class="text-center py-4">No matching records found</td>
-                                </tr>
-                            `;
+                                                    <tr id="noDataRow">
+                                                        <td colspan="7" class="text-center py-4">No matching records found</td>
+                                                    </tr>
+                                                `;
                     return;
                 }
 
@@ -428,18 +492,18 @@
                 paginationContainer.style.display = 'block';
 
                 let paginationHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            Showing ${filteredData.length > 0 ? currentPage * pageSize + 1 : 0} to ${Math.min((currentPage + 1) * pageSize, filteredData.length)} of ${filteredData.length} entries
-                        </div>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination mb-0">
-                                <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
-                                    <button class="page-link" data-page="prev" aria-label="Previous">
-                                        <span aria-hidden="true">&laquo;</span>
-                                    </button>
-                                </li>
-                `;
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                Showing ${filteredData.length > 0 ? currentPage * pageSize + 1 : 0} to ${Math.min((currentPage + 1) * pageSize, filteredData.length)} of ${filteredData.length} entries
+                                            </div>
+                                            <nav aria-label="Page navigation">
+                                                <ul class="pagination mb-0">
+                                                    <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+                                                        <button class="page-link" data-page="prev" aria-label="Previous">
+                                                            <span aria-hidden="true">&laquo;</span>
+                                                        </button>
+                                                    </li>
+                                    `;
 
 
                 const maxPages = 5;
@@ -448,26 +512,26 @@
 
                 for (let i = startPage; i < endPage; i++) {
                     paginationHTML += `
-                        <li class="page-item ${i === currentPage ? 'active' : ''}">
-                            <button class="page-link" data-page="${i}">${i + 1}</button>
-                        </li>
-                    `;
+                                            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                                                <button class="page-link" data-page="${i}">${i + 1}</button>
+                                            </li>
+                                        `;
                 }
 
                 paginationHTML += `
-                                <li class="page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}">
-                                    <button class="page-link" data-page="next" aria-label="Next">
-                                        <span aria-hidden="true">&raquo;</span>
-                                    </button>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                `;
+                                                    <li class="page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}">
+                                                        <button class="page-link" data-page="next" aria-label="Next">
+                                                            <span aria-hidden="true">&raquo;</span>
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    `;
 
                 paginationContainer.innerHTML = paginationHTML;
 
-          
+
                 const pageButtons = paginationContainer.querySelectorAll('.page-link');
                 pageButtons.forEach(button => {
                     button.addEventListener('click', function () {
@@ -493,7 +557,7 @@
 
 
             function initTableEvents() {
-         
+
                 const checkboxes = document.querySelectorAll('.row-checkbox');
                 checkboxes.forEach(checkbox => {
                     checkbox.addEventListener('change', function () {
@@ -511,7 +575,7 @@
                     });
                 });
 
-    
+
                 const downloadButtons = document.querySelectorAll('.download-btn');
                 downloadButtons.forEach(button => {
                     button.addEventListener('click', function () {
@@ -524,7 +588,7 @@
                     });
                 });
 
-       
+
                 const deleteButtons = document.querySelectorAll('.delete-btn');
                 deleteButtons.forEach(button => {
                     button.addEventListener('click', function () {
