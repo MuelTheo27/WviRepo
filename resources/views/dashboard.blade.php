@@ -137,7 +137,7 @@
                            
                                 <div class="col-md-6">
                                     <label class="form-label">Year</label>
-                                    <select class="form-select" name="year" onchange="this.form.submit()">
+                                    <select class="form-select" name="year" id="yearSelect">
                                     @foreach($years as $option)
                                             <option value="{{ $option->value }}" @selected(old('year') == $option->value)>
                                                 {{ $option->value }}
@@ -147,7 +147,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Month</label>
-                                    <select class="form-select" name="month" onchange="this.form.submit()">
+                                    <select class="form-select" name="month" id="monthSelect">
                                         @foreach($months as $option)
                                             <option value="{{ $option }}" @selected(old('month') == $option)>
                                                 {{ $option }}
@@ -190,15 +190,17 @@
 
         Dropzone.autoDiscover = false
         var myDropzone = new Dropzone("div#fileDropzone", {
+            
             url: "api/upload/xlsx",
-            paramName: "file",
-            maxFiles: 5,
-            acceptedFiles: ".xlsx",
-            previewsContainer: null,
-            createImageThumbnails: false,
-            addRemoveLinks: false,
-            autoProcessQueue: false,
-            uploadMultiple: true,
+            paramName: 'file',
+                maxFiles: 5,
+                acceptedFiles: '.xlsx',
+                createImageThumbnails: false,
+                previewsContainer: false,
+                addRemoveLinks: false,
+                autoProcessQueue: false,
+                uploadMultiple: true,
+                parallelUploads : 5,
             headers: {
                 "X-CSRF-TOKEN": $('input[name="_token"]').val()
             },
@@ -217,12 +219,17 @@
 
                 let uploadedFiles = [];
 
+                this.on("sendingmultiple", function (files, xhr, formData) {
+                    const year = calculateFiscalYear(
+                        parseInt(document.getElementById("monthSelect").value),
+                        parseInt(document.getElementById("yearSelect").value)
+                    );
+                    console.log(year);
+                    formData.append("fiscalYear", year);
+                    formData.append('fileId', JSON.stringify(files.map(file => file.upload?.uuid)));
+                    });
+
                 this.on("addedfile", function (file) {
-
-                    if (file.previewElement) {
-                        file.previewElement.remove();
-                    }
-
                     let listItem = document.createElement("li");
                     listItem.innerHTML = `${file.name} <button class="remove-file">Remove</button>`;
                     listItem.querySelector(".remove-file").addEventListener("click", () => {
@@ -244,20 +251,13 @@
                 });
 
                 document.getElementById("saveNewSponsor").addEventListener("click", function () {
-                  
-
-                    dropzoneInstance.processQueue()
+                dropzoneInstance.processQueue()
                     // $("#saveNe").prop("disabled", true);
 
                 });
 
             },
-            sendingMultiple: function (files, xhr, formData) {
-                const year = calculateFiscalYear(parseInt(document.getElementById("monthSelect").value), parseInt(document.getElementById("yearSelect").value));
-                formData.append("fiscalYear", year);
-                formData.append('fileId', JSON.stringify(files.map(file => file.upload?.uuid)));
-
-            },
+          
             success: function (file, response) {
                 let uploadModal = bootstrap.Modal.getInstance(document.getElementById("addSponsorModal"));
                 uploadModal.hide();

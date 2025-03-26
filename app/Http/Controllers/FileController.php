@@ -40,7 +40,7 @@ class FileController extends Controller
             'file' => 'required|mimes:xlsx,csv'
         ], [
             'file.required' => 'Please upload a file',
-            'file.mimes' => 'Format file harus xlsx atau csv',
+            
         ]);
         try {
             $uploadedFile = $request->file("file");
